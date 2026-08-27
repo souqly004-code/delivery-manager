@@ -1,14 +1,8 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<!DOCTYPE html><html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#2563eb">
-<title>مدير الديلفري</title>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<style>
+<meta name="theme-color" content="#2563eb"><title>مدير الديلفري</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>
 *{
     box-sizing:border-box;
     font-family:Arial,Tahoma,sans-serif;
@@ -23,7 +17,7 @@ body{
 header{
     background:#2563eb;
     color:white;
-    padding:18px;
+    padding:17px 15px;
     text-align:center;
     position:sticky;
     top:0;
@@ -33,7 +27,7 @@ header{
 
 header h1{
     margin:0;
-    font-size:23px;
+    font-size:22px;
 }
 
 .container{
@@ -60,7 +54,7 @@ header h1{
 .card{
     background:white;
     border-radius:15px;
-    padding:16px;
+    padding:15px;
     box-shadow:0 2px 8px rgba(0,0,0,.08);
 }
 
@@ -114,6 +108,10 @@ button{
     padding:12px 15px;
     font-size:15px;
     cursor:pointer;
+}
+
+button:active{
+    transform:scale(.98);
 }
 
 .primary{
@@ -170,7 +168,7 @@ button{
     justify-content:space-between;
     align-items:center;
     gap:10px;
-    margin:8px 0;
+    margin:9px 0;
 }
 
 .debt{
@@ -180,6 +178,11 @@ button{
 
 .paid{
     color:#16a34a;
+    font-weight:bold;
+}
+
+.partial{
+    color:#f59e0b;
     font-weight:bold;
 }
 
@@ -254,7 +257,7 @@ nav button.active{
     margin-top:10px;
 }
 
-.debtbox{
+.balance.debtbox{
     background:#fef2f2;
     border-color:#fecaca;
 }
@@ -271,17 +274,39 @@ hr{
 }
 
 .status{
+    display:inline-block;
+    padding:5px 9px;
+    border-radius:20px;
+    font-size:12px;
+    font-weight:bold;
+}
+
+.status-paid{
+    background:#dcfce7;
+    color:#166534;
+}
+
+.status-partial{
+    background:#fef3c7;
+    color:#92400e;
+}
+
+.status-debt{
+    background:#fee2e2;
+    color:#991b1b;
+}
+
+.connection{
     text-align:center;
-    padding:8px;
+    padding:7px;
     font-size:13px;
+    background:#fee2e2;
+    color:#991b1b;
 }
 
-.connected{
-    color:#15803d;
-}
-
-.error{
-    color:#dc2626;
+.connection.ok{
+    background:#dcfce7;
+    color:#166534;
 }
 
 @media(min-width:650px){
@@ -289,441 +314,301 @@ hr{
         grid-template-columns:repeat(4,1fr);
     }
 }
-</style>
-</head>
-
-<body>
-
-<header>
-<h1>🚚 مدير الديلفري</h1>
-<div id="connectionStatus" class="status">
-جاري الاتصال بقاعدة البيانات...
-</div>
-</header>
-
-<div class="container">
-
-<!-- الرئيسية -->
-<section id="home" class="page active">
-
-<div class="cards">
-
-<div class="card">
+</style></head><body><header>
+    <h1>🚚 مدير الديلفري</h1>
+</header><div id="connectionStatus" class="connection">
+    🔄 جاري الاتصال بقاعدة البيانات...
+</div><div class="container"><!-- ================= الرئيسية ================= --><section id="home" class="page active"><div class="cards"><div class="card">
 <small>دخل الديلفري</small>
 <strong id="todayIncome">0 ₪</strong>
-</div>
-
-<div class="card">
+</div><div class="card">
 <small>طلبات اليوم</small>
 <strong id="todayOrders">0</strong>
-</div>
-
-<div class="card">
+</div><div class="card">
 <small>إجمالي الديون</small>
 <strong id="totalDebt">0 ₪</strong>
-</div>
-
-<div class="card">
+</div><div class="card">
 <small>مصاريف اليوم</small>
 <strong id="todayExpenses">0 ₪</strong>
-</div>
-
-</div>
-
-<div class="form">
-
-<h2>📊 ملخص الحساب</h2>
-
-<div class="row">
+</div></div><div class="form"><h2>📊 ملخص الحساب</h2><div class="row">
 <span>إجمالي أجرة الديلفري</span>
 <b id="allDelivery">0 ₪</b>
-</div>
-
-<div class="row">
+</div><div class="row">
 <span>إجمالي المدفوع</span>
 <b class="paid" id="allPaid">0 ₪</b>
-</div>
-
-<div class="row">
+</div><div class="row">
 <span>إجمالي الديون</span>
 <b class="debt" id="allDebt">0 ₪</b>
-</div>
-
-<div class="row">
+</div><div class="row">
 <span>إجمالي المصاريف</span>
 <b id="allExpenses">0 ₪</b>
-</div>
-
-<div class="row">
+</div><div class="row">
 <span>صافي الدخل</span>
 <b id="netProfit">0 ₪</b>
-</div>
-
-</div>
-
-<div class="form">
-
-<h2>⚡ إجراءات سريعة</h2>
-
-<div class="actions">
-
-<button class="primary" onclick="showPage('addOrderPage')">
+</div></div><div class="form"><h2>⚡ إجراءات سريعة</h2><div class="actions"><button class="primary"
+onclick="showPage('addOrderPage')">
 ➕ إضافة طلب
 </button>
 
-<button class="success" onclick="showPage('customersPage')">
+<button class="success"
+onclick="showPage('customersPage')">
 👥 العملاء
 </button>
 
-<button class="warning" onclick="showPage('expensesPage')">
-💸 إضافة مصروف
+<button class="warning"
+onclick="showPage('expensesPage')">
+💸 مصروف
 </button>
 
-</div>
+</div></div></section><!-- ================= إضافة طلب ================= --><section id="addOrderPage" class="page"><div class="form"><h2>📦 إضافة طلب ديلفري</h2><label>العميل</label>
 
-</div>
-
-</section>
-
-
-<!-- إضافة طلب -->
-<section id="addOrderPage" class="page">
-
-<div class="form">
-
-<h2>📦 إضافة طلب جديد</h2>
-
-<label>العميل</label>
-
-<div class="inline">
-
-<select id="orderCustomer" onchange="showSelectedCustomerBalance()">
-<option value="">-- اختر العميل --</option>
-</select>
-
-<button class="success" onclick="openCustomerModal()">
+<div class="inline"><select id="orderCustomer"><option value="">-- اختر العميل --</option></select><button class="success"
+onclick="openCustomerModal()">
 ➕ عميل
 </button>
 
-</div>
+</div><label>اسم المستلم</label>
 
-<div id="customerBalanceBox"></div>
-
-<label>اسم المستلم</label>
-<input id="receiverName" placeholder="اسم الشخص الذي سيستلم الطلب">
+<input
+id="receiverName"
+placeholder="اسم المستلم">
 
 <label>هاتف المستلم</label>
-<input id="receiverPhone" type="tel" placeholder="رقم الهاتف">
+
+<input
+id="receiverPhone"
+type="tel"
+placeholder="رقم الهاتف">
 
 <label>عنوان المستلم</label>
-<textarea id="receiverAddress" placeholder="عنوان المستلم"></textarea>
 
-<label>🚚 أجرة الديلفري</label>
-<input id="deliveryFee" type="number" step="0.01" min="0" placeholder="0" oninput="calculateDebt()">
+<textarea
+id="receiverAddress"
+placeholder="عنوان المستلم"></textarea><label>أجرة الديلفري</label>
 
-<label>💵 المبلغ المدفوع</label>
-<input id="paidAmount" type="number" step="0.01" min="0" value="0" placeholder="0" oninput="calculateDebt()">
+<input
+id="deliveryFee"
+type="number"
+step="0.01"
+min="0"
+placeholder="مثال: 10">
 
-<div class="balance debtbox">
+<label>المبلغ المدفوع الآن</label>
 
-<div class="row">
+<input
+id="paidAmount"
+type="number"
+step="0.01"
+min="0"
+value="0"
+placeholder="0"
+oninput="calculateOrder()">
+
+<div class="balance"><div class="row">
 <span>أجرة الديلفري</span>
-<b id="showDelivery">0 ₪</b>
-</div>
-
-<div class="row">
+<b id="previewDelivery">0 ₪</b>
+</div><div class="row">
 <span>المدفوع</span>
-<b class="paid" id="showPaid">0 ₪</b>
-</div>
+<b class="paid" id="previewPaid">0 ₪</b>
+</div><div class="row">
+<span>المتبقي</span>
+<b class="debt" id="previewDebt">0 ₪</b>
+</div></div><label>تفاصيل الطلب</label>
 
-<div class="row">
-<span>الدين الجديد</span>
-<b class="debt" id="newDebt">0 ₪</b>
-</div>
+<textarea
+id="orderDetails"
+placeholder="تفاصيل الطلب"></textarea><label>ملاحظات</label>
 
-<div class="row">
-<span>رصيد العميل السابق</span>
-<b id="previousBalance">0 ₪</b>
-</div>
-
-<div class="row">
-<span>رصيد العميل بعد الطلب</span>
-<b class="debt" id="newCustomerBalance">0 ₪</b>
-</div>
-
-</div>
-
-<label>تفاصيل الطلب</label>
-<textarea id="orderDetails" placeholder="تفاصيل الطلب"></textarea>
-
-<label>ملاحظات</label>
-<textarea id="orderNotes" placeholder="ملاحظات إضافية"></textarea>
-
-<div class="actions">
-
-<button class="primary" onclick="addOrder()">
+<textarea
+id="orderNotes"
+placeholder="ملاحظات إضافية"></textarea><div class="actions"><button class="primary"
+onclick="addOrder()">
 💾 حفظ الطلب
 </button>
 
-<button class="gray" onclick="clearOrderForm()">
+<button class="gray"
+onclick="clearOrderForm()">
 مسح
 </button>
 
-</div>
-
-</div>
-
-</section>
-
-
-<!-- الطلبات -->
-<section id="ordersPage" class="page">
-
-<div class="form">
-
-<h2>📋 الطلبات</h2>
-
-<input id="orderSearch"
-placeholder="🔎 البحث بالعميل أو المستلم أو الهاتف..."
+</div></div></section><!-- ================= الطلبات ================= --><section id="ordersPage" class="page"><div class="form"><h2>📋 الطلبات</h2><input
+id="orderSearch"
+placeholder="🔎 بحث بالعميل أو المستلم أو الهاتف"
 oninput="renderOrders()">
 
 <br><br>
 
-<select id="orderFilter" onchange="renderOrders()">
+<select id="orderFilter"
+onchange="renderOrders()">
+
 <option value="all">كل الطلبات</option>
 <option value="today">طلبات اليوم</option>
-<option value="debt">طلبات عليها دين</option>
-</select>
-
-</div>
-
-<div id="ordersList"></div>
-
-</section>
-
-
-<!-- العملاء -->
-<section id="customersPage" class="page">
-
-<div class="form">
-
-<h2>👥 العملاء</h2>
-
-<button class="primary" style="width:100%" onclick="openCustomerModal()">
+<option value="debt">عليها دين</option>
+<option value="paid">مسددة</option>
+<option value="partial">مدفوعة جزئيًا</option></select></div><div id="ordersList"></div></section><!-- ================= العملاء ================= --><section id="customersPage" class="page"><div class="form"><h2>👥 العملاء</h2><button
+class="primary"
+style="width:100%"
+onclick="openCustomerModal()">
 ➕ إضافة عميل جديد
 </button>
 
 <br><br>
 
-<input id="customerSearch"
-placeholder="🔎 البحث عن عميل..."
+<input
+id="customerSearch"
+placeholder="🔎 البحث عن عميل"
 oninput="renderCustomers()">
 
-</div>
+</div><div id="customersList"></div></section><!-- ================= المصاريف ================= --><section id="expensesPage" class="page"><div class="form"><h2>💸 إضافة مصروف</h2><label>نوع المصروف</label>
 
-<div id="customersList"></div>
-
-</section>
-
-
-<!-- المصاريف -->
-<section id="expensesPage" class="page">
-
-<div class="form">
-
-<h2>💸 إضافة مصروف</h2>
-
-<label>نوع المصروف</label>
-<input id="expenseTitle" placeholder="مثال: بنزين">
+<input
+id="expenseTitle"
+placeholder="مثال: بنزين">
 
 <label>المبلغ</label>
-<input id="expenseAmount" type="number" step="0.01" min="0" placeholder="0">
+
+<input
+id="expenseAmount"
+type="number"
+step="0.01"
+min="0"
+placeholder="0">
 
 <label>ملاحظات</label>
-<textarea id="expenseNote"></textarea>
 
-<button class="primary"
+<textarea id="expenseNote"></textarea><button
+class="primary"
 style="width:100%;margin-top:12px"
 onclick="addExpense()">
 💾 حفظ المصروف
 </button>
 
-</div>
-
-<div id="expensesList"></div>
-
-</section>
-
-
-<!-- التقارير -->
-<section id="reportsPage" class="page">
-
-<div class="form">
-
-<h2>📊 التقارير</h2>
-
-<div class="row">
+</div><div id="expensesList"></div></section><!-- ================= التقارير ================= --><section id="reportsPage" class="page"><div class="form"><h2>📊 التقارير</h2><div class="row">
 <span>عدد الطلبات</span>
 <b id="reportOrders">0</b>
-</div>
-
-<div class="row">
-<span>إجمالي أجرة الديلفري</span>
+</div><div class="row">
+<span>أجرة الديلفري</span>
 <b id="reportDelivery">0 ₪</b>
-</div>
-
-<div class="row">
+</div><div class="row">
 <span>إجمالي المدفوع</span>
 <b class="paid" id="reportPaid">0 ₪</b>
-</div>
-
-<div class="row">
+</div><div class="row">
 <span>إجمالي الديون</span>
 <b class="debt" id="reportDebt">0 ₪</b>
-</div>
-
-<div class="row">
+</div><div class="row">
 <span>المصاريف</span>
 <b id="reportExpenses">0 ₪</b>
-</div>
-
-<div class="row">
-<span>صافي الدخل</span>
+</div><div class="row">
+<span>الصافي</span>
 <b id="reportProfit">0 ₪</b>
-</div>
+</div></div><div class="form"><h2>🔄 تحديث البيانات</h2><p class="small">
+البيانات محفوظة في قاعدة بيانات Supabase.
+يمكنك الضغط على الزر لتحديث البيانات.
+</p><button
+class="primary"
+style="width:100%"
+onclick="loadAllData()">
+🔄 تحديث من قاعدة البيانات
+</button>
 
-</div>
-
-</section>
-
-</div>
-
-
-<!-- القائمة -->
-
-<nav>
-
-<button id="nav-home"
+</div></section></div><!-- ================= القائمة ================= --><nav><button
+id="nav-home"
 class="active"
 onclick="showPage('home')">
 🏠<br>الرئيسية
 </button>
 
-<button id="nav-addOrderPage"
+<button
+id="nav-addOrderPage"
 onclick="showPage('addOrderPage')">
 ➕<br>طلب
 </button>
 
-<button id="nav-ordersPage"
+<button
+id="nav-ordersPage"
 onclick="showPage('ordersPage')">
 📦<br>الطلبات
 </button>
 
-<button id="nav-customersPage"
+<button
+id="nav-customersPage"
 onclick="showPage('customersPage')">
 👥<br>العملاء
 </button>
 
-<button id="nav-reportsPage"
+<button
+id="nav-reportsPage"
 onclick="showPage('reportsPage')">
 📊<br>التقارير
 </button>
 
-</nav>
+</nav><!-- ================= نافذة العميل ================= --><div id="customerModal" class="modal"><div class="modal-box"><h2>👤 إضافة عميل</h2><label>اسم العميل</label>
 
-
-<!-- نافذة إضافة عميل -->
-
-<div id="customerModal" class="modal">
-
-<div class="modal-box">
-
-<h2>👤 إضافة عميل</h2>
-
-<label>اسم العميل</label>
-<input id="newCustomerName" placeholder="مثال: مطعم أبو أحمد">
+<input
+id="newCustomerName"
+placeholder="مثال: مطعم أبو أحمد">
 
 <label>رقم الهاتف</label>
-<input id="newCustomerPhone" type="tel" placeholder="رقم الهاتف">
+
+<input
+id="newCustomerPhone"
+type="tel"
+placeholder="رقم الهاتف">
 
 <label>ملاحظات</label>
-<textarea id="newCustomerNotes"></textarea>
 
-<div class="actions">
-
-<button class="success" onclick="addCustomer()">
-💾 حفظ العميل
+<textarea
+id="newCustomerNotes"
+placeholder="ملاحظات"></textarea><div class="actions"><button
+class="success"
+onclick="addCustomer()">
+💾 حفظ
 </button>
 
-<button class="gray" onclick="closeCustomerModal()">
+<button
+class="gray"
+onclick="closeCustomerModal()">
 إلغاء
 </button>
 
-</div>
+</div></div></div><!-- ================= نافذة الدفع ================= --><div id="paymentModal" class="modal"><div class="modal-box"><h2>💵 تسجيل دفعة</h2><div id="paymentInfo"></div><label>مبلغ الدفعة</label>
 
-</div>
-</div>
-
-
-<!-- نافذة الدفع -->
-
-<div id="paymentModal" class="modal">
-
-<div class="modal-box">
-
-<h2>💵 تسجيل دفعة</h2>
-
-<div id="paymentInfo"></div>
-
-<label>مبلغ الدفعة</label>
-<input id="paymentAmount" type="number" step="0.01" min="0" placeholder="0">
+<input
+id="paymentAmount"
+type="number"
+step="0.01"
+min="0"
+placeholder="المبلغ">
 
 <label>ملاحظات</label>
-<textarea id="paymentNotes"></textarea>
 
-<div class="actions">
-
-<button class="success" onclick="payCustomer()">
-💾 حفظ الدفعة
+<textarea
+id="paymentNotes"
+placeholder="مثال: دفع نقدًا"></textarea><div class="actions"><button
+class="success"
+onclick="savePayment()">
+💾 تسجيل الدفعة
 </button>
 
-<button class="gray" onclick="closePaymentModal()">
+<button
+class="gray"
+onclick="closePaymentModal()">
 إلغاء
 </button>
 
-</div>
-
-</div>
-</div>
-
-
-<!-- كشف الحساب -->
-
-<div id="statementModal" class="modal">
-
-<div class="modal-box">
-
-<h2 id="statementTitle">كشف الحساب</h2>
-
-<div id="statementContent"></div>
-
-<div class="actions">
-
-<button class="gray" onclick="closeStatementModal()">
+</div></div></div><!-- ================= كشف الحساب ================= --><div id="statementModal" class="modal"><div class="modal-box"><h2 id="statementTitle">
+كشف الحساب
+</h2><div id="statementContent"></div><div class="actions"><button
+class="gray"
+onclick="closeStatementModal()">
 إغلاق
 </button>
 
-</div>
+</div></div></div><script>
 
-</div>
-</div>
-
-
-<script>
-
-/* =========================================================
+/* =====================================================
    إعداد Supabase
-========================================================= */
+===================================================== */
 
 const SUPABASE_URL =
 "https://iphvcddnvhilokwkwfyu.supabase.co";
@@ -738,164 +623,47 @@ SUPABASE_KEY
 );
 
 
-/* =========================================================
-   البيانات
-========================================================= */
+/* =====================================================
+   البيانات المحلية للعرض
+===================================================== */
 
 let customers = [];
 let orders = [];
 let payments = [];
 let expenses = [];
 
-let paymentCustomerId = null;
+let paymentOrderId = null;
 
 
-/* =========================================================
-   الاتصال
-========================================================= */
-
-async function testConnection(){
-
-try{
-
-const { error } =
-await db
-.from("customers")
-.select("id")
-.limit(1);
-
-if(error) throw error;
-
-document.getElementById("connectionStatus").innerHTML =
-"🟢 متصل بقاعدة البيانات";
-
-document.getElementById("connectionStatus")
-.className="status connected";
-
-return true;
-
-}catch(error){
-
-console.error(error);
-
-document.getElementById("connectionStatus").innerHTML =
-"🔴 لم يتم الاتصال بقاعدة البيانات";
-
-document.getElementById("connectionStatus")
-.className="status error";
-
-return false;
-
-}
-
-}
-
-
-/* =========================================================
-   تحميل البيانات
-========================================================= */
-
-async function loadData(){
-
-try{
-
-const customersResult =
-await db
-.from("customers")
-.select("*")
-.order("created_at",{ascending:false});
-
-if(customersResult.error)
-throw customersResult.error;
-
-
-const ordersResult =
-await db
-.from("orders")
-.select("*")
-.order("created_at",{ascending:false});
-
-if(ordersResult.error)
-throw ordersResult.error;
-
-
-const paymentsResult =
-await db
-.from("payments")
-.select("*")
-.order("created_at",{ascending:false});
-
-if(paymentsResult.error)
-throw paymentsResult.error;
-
-
-const expensesResult =
-await db
-.from("expenses")
-.select("*")
-.order("created_at",{ascending:false});
-
-if(expensesResult.error)
-throw expensesResult.error;
-
-
-customers=customersResult.data || [];
-orders=ordersResult.data || [];
-payments=paymentsResult.data || [];
-expenses=expensesResult.data || [];
-
-
-populateCustomerSelect();
-
-updateDashboard();
-
-renderCustomers();
-
-renderOrders();
-
-renderExpenses();
-
-renderReports();
-
-}catch(error){
-
-console.error(error);
-
-alert(
-"حدث خطأ أثناء تحميل البيانات من قاعدة البيانات.\n"+
-error.message
-);
-
-}
-
-}
-
-
-/* =========================================================
+/* =====================================================
    العملة
-========================================================= */
+===================================================== */
+
+const currency = "₪";
 
 function money(value){
 
-return Number(value || 0).toFixed(2)+" ₪";
+return Number(value || 0).toFixed(2) +
+" " + currency;
 
 }
 
 
-/* =========================================================
+/* =====================================================
    التاريخ
-========================================================= */
+===================================================== */
 
 function today(){
 
-const d=new Date();
+const d = new Date();
 
-return d.getFullYear()+"-"+
-String(d.getMonth()+1).padStart(2,"0")+"-"+
+return d.getFullYear() +
+"-" +
+String(d.getMonth()+1).padStart(2,"0") +
+"-" +
 String(d.getDate()).padStart(2,"0");
 
 }
-
 
 function formatDate(date){
 
@@ -904,56 +672,178 @@ return new Date(date).toLocaleString("ar");
 }
 
 
-/* =========================================================
-   التنقل
-========================================================= */
+/* =====================================================
+   حالة الاتصال
+===================================================== */
+
+function connection(message,ok=false){
+
+const box =
+document.getElementById("connectionStatus");
+
+box.textContent = message;
+
+box.classList.toggle("ok",ok);
+
+}
+
+
+/* =====================================================
+   تحميل البيانات من Supabase
+===================================================== */
+
+async function loadAllData(){
+
+try{
+
+connection("🔄 جاري تحميل البيانات...");
+
+const [
+customersResult,
+ordersResult,
+paymentsResult,
+expensesResult
+] = await Promise.all([
+
+db
+.from("customers")
+.select("*")
+.order("created_at",{ascending:false}),
+
+db
+.from("orders")
+.select("*")
+.order("created_at",{ascending:false}),
+
+db
+.from("payments")
+.select("*")
+.order("created_at",{ascending:false}),
+
+db
+.from("expenses")
+.select("*")
+.order("created_at",{ascending:false})
+
+]);
+
+
+if(customersResult.error)
+throw customersResult.error;
+
+if(ordersResult.error)
+throw ordersResult.error;
+
+if(paymentsResult.error)
+throw paymentsResult.error;
+
+if(expensesResult.error)
+throw expensesResult.error;
+
+
+customers =
+customersResult.data || [];
+
+orders =
+ordersResult.data || [];
+
+payments =
+paymentsResult.data || [];
+
+expenses =
+expensesResult.data || [];
+
+
+connection(
+"🟢 متصل بقاعدة البيانات",
+true
+);
+
+
+populateCustomerSelect();
+
+renderOrders();
+
+renderCustomers();
+
+renderExpenses();
+
+updateDashboard();
+
+renderReports();
+
+
+}catch(error){
+
+console.error(error);
+
+connection(
+"🔴 لم يتم الاتصال بقاعدة البيانات"
+);
+
+alert(
+"حدث خطأ في الاتصال بقاعدة البيانات:\n\n" +
+error.message
+);
+
+}
+
+}
+
+
+/* =====================================================
+   التنقل بين الصفحات
+===================================================== */
 
 function showPage(id){
 
-document.querySelectorAll(".page")
-.forEach(function(page){
-
+document
+.querySelectorAll(".page")
+.forEach(page=>{
 page.classList.remove("active");
-
 });
 
-const page=document.getElementById(id);
+const page =
+document.getElementById(id);
 
-if(page)
+if(page){
+
 page.classList.add("active");
 
-
-document.querySelectorAll("nav button")
-.forEach(function(button){
-
-button.classList.remove("active");
-
-});
-
-const nav=document.getElementById("nav-"+id);
-
-if(nav)
-nav.classList.add("active");
-
-
-if(id==="home")
-updateDashboard();
-
-if(id==="addOrderPage"){
-populateCustomerSelect();
-showSelectedCustomerBalance();
 }
 
-if(id==="ordersPage")
+document
+.querySelectorAll("nav button")
+.forEach(button=>{
+button.classList.remove("active");
+});
+
+const nav =
+document.getElementById("nav-"+id);
+
+if(nav){
+
+nav.classList.add("active");
+
+}
+
+
+if(id === "home")
+updateDashboard();
+
+if(id === "addOrderPage")
+populateCustomerSelect();
+
+if(id === "ordersPage")
 renderOrders();
 
-if(id==="customersPage")
+if(id === "customersPage")
 renderCustomers();
 
-if(id==="expensesPage")
+if(id === "expensesPage")
 renderExpenses();
 
-if(id==="reportsPage")
+if(id === "reportsPage")
 renderReports();
 
 window.scrollTo(0,0);
@@ -961,16 +851,44 @@ window.scrollTo(0,0);
 }
 
 
-/* =========================================================
+/* =====================================================
    العملاء
-========================================================= */
+===================================================== */
+
+function populateCustomerSelect(){
+
+const select =
+document.getElementById("orderCustomer");
+
+select.innerHTML =
+'<option value="">-- اختر العميل --</option>';
+
+customers.forEach(customer=>{
+
+const option =
+document.createElement("option");
+
+option.value =
+customer.id;
+
+option.textContent =
+customer.name;
+
+select.appendChild(option);
+
+});
+
+}
+
 
 function openCustomerModal(){
 
-document.getElementById("customerModal")
+document
+.getElementById("customerModal")
 .style.display="block";
 
-document.getElementById("newCustomerName")
+document
+.getElementById("newCustomerName")
 .focus();
 
 }
@@ -978,28 +896,44 @@ document.getElementById("newCustomerName")
 
 function closeCustomerModal(){
 
-document.getElementById("customerModal")
+document
+.getElementById("customerModal")
 .style.display="none";
 
-document.getElementById("newCustomerName").value="";
-document.getElementById("newCustomerPhone").value="";
-document.getElementById("newCustomerNotes").value="";
+document
+.getElementById("newCustomerName")
+.value="";
+
+document
+.getElementById("newCustomerPhone")
+.value="";
+
+document
+.getElementById("newCustomerNotes")
+.value="";
 
 }
 
 
+/* =====================================================
+   إضافة عميل إلى Supabase
+===================================================== */
+
 async function addCustomer(){
 
-const name=
-document.getElementById("newCustomerName")
+const name =
+document
+.getElementById("newCustomerName")
 .value.trim();
 
-const phone=
-document.getElementById("newCustomerPhone")
+const phone =
+document
+.getElementById("newCustomerPhone")
 .value.trim();
 
-const notes=
-document.getElementById("newCustomerNotes")
+const notes =
+document
+.getElementById("newCustomerNotes")
 .value.trim();
 
 
@@ -1012,13 +946,11 @@ return;
 }
 
 
-const exists=
-customers.some(function(c){
-
-return c.name.trim().toLowerCase()===
-name.toLowerCase();
-
-});
+const exists =
+customers.some(customer =>
+customer.name.trim().toLowerCase() ===
+name.toLowerCase()
+);
 
 if(exists){
 
@@ -1031,13 +963,16 @@ return;
 
 try{
 
-const {data,error}=await db
+const {data,error} =
+await db
 .from("customers")
 .insert({
 
 name:name,
-phone:phone,
-notes:notes
+
+phone:phone || null,
+
+notes:notes || null
 
 })
 .select()
@@ -1056,241 +991,248 @@ renderCustomers();
 
 closeCustomerModal();
 
-document.getElementById("orderCustomer").value=data.id;
 
-showSelectedCustomerBalance();
+document
+.getElementById("orderCustomer")
+.value=data.id;
 
-alert("تم حفظ العميل في قاعدة البيانات ✅");
+
+alert("تمت إضافة العميل بنجاح ✅");
+
 
 }catch(error){
 
 console.error(error);
 
-alert("فشل حفظ العميل:\n"+error.message);
+alert(
+"لم يتم حفظ العميل:\n" +
+error.message
+);
 
 }
 
 }
 
 
-/* =========================================================
-   قائمة العملاء
-========================================================= */
+/* =====================================================
+   رصيد العميل
+===================================================== */
 
-function populateCustomerSelect(){
+function customerBalance(customerId){
 
-const select=
-document.getElementById("orderCustomer");
-
-if(!select)
-return;
-
-const oldValue=select.value;
-
-select.innerHTML=
-'<option value="">-- اختر العميل --</option>';
-
-customers.forEach(function(customer){
-
-const option=document.createElement("option");
-
-option.value=customer.id;
-
-option.textContent=customer.name;
-
-select.appendChild(option);
-
-});
-
-
-if(
-customers.some(function(c){
-return String(c.id)===String(oldValue);
-})
-){
-
-select.value=oldValue;
-
-}
-
-}
-
-
-/* =========================================================
-   حساب دين العميل
-========================================================= */
-
-function orderDebt(order){
-
-return Math.max(
-0,
-Number(order.delivery_fee||0)-
-Number(order.paid_amount||0)
+return orders
+.filter(order =>
+String(order.customer_id) ===
+String(customerId)
+)
+.reduce(
+(sum,order)=>
+sum + Number(order.debt_amount || 0),
+0
 );
 
 }
 
 
-function customerBalance(id){
+/* =====================================================
+   حساب الطلب
+===================================================== */
 
-if(!id)
-return 0;
+function calculateOrder(){
 
-
-const debts=
-orders
-.filter(function(order){
-
-return String(order.customer_id)===String(id);
-
-})
-.reduce(function(sum,order){
-
-return sum+orderDebt(order);
-
-},0);
-
-
-const paidLater=
-payments
-.filter(function(payment){
-
-return String(payment.customer_id)===String(id);
-
-})
-.reduce(function(sum,payment){
-
-return sum+Number(payment.amount||0);
-
-},0);
-
-
-return Math.max(0,debts-paidLater);
-
-}
-
-
-/* =========================================================
-   رصيد العميل المختار
-========================================================= */
-
-function showSelectedCustomerBalance(){
-
-const id=
-document.getElementById("orderCustomer").value;
-
-if(!id){
-
-document.getElementById("customerBalanceBox")
-.innerHTML="";
-
-document.getElementById("previousBalance")
-.textContent=money(0);
-
-document.getElementById("newCustomerBalance")
-.textContent=money(0);
-
-return;
-
-}
-
-
-const balance=customerBalance(id);
-
-document.getElementById("customerBalanceBox")
-.innerHTML=
-`
-<div class="balance ${balance>0?"debtbox":""}">
-الرصيد الحالي:
-<b class="${balance>0?"debt":"paid"}">
-${money(balance)}
-</b>
-</div>
-`;
-
-calculateDebt();
-
-}
-
-
-/* =========================================================
-   حساب الدين الجديد
-========================================================= */
-
-function calculateDebt(){
-
-const fee=
+const delivery =
 Number(
-document.getElementById("deliveryFee").value||0
+document
+.getElementById("deliveryFee")
+.value || 0
 );
 
-const paid=
+const paid =
 Number(
-document.getElementById("paidAmount").value||0
+document
+.getElementById("paidAmount")
+.value || 0
 );
 
-const debt=
-Math.max(0,fee-paid);
+const debt =
+Math.max(0,delivery-paid);
 
-const customerId=
-document.getElementById("orderCustomer").value;
 
-const previous=
-customerBalance(customerId);
+document
+.getElementById("previewDelivery")
+.textContent =
+money(delivery);
 
-document.getElementById("showDelivery")
-.textContent=money(fee);
+document
+.getElementById("previewPaid")
+.textContent =
+money(paid);
 
-document.getElementById("showPaid")
-.textContent=money(paid);
-
-document.getElementById("newDebt")
-.textContent=money(debt);
-
-document.getElementById("previousBalance")
-.textContent=money(previous);
-
-document.getElementById("newCustomerBalance")
-.textContent=
-money(previous+debt);
+document
+.getElementById("previewDebt")
+.textContent =
+money(debt);
 
 }
 
 
-/* =========================================================
+/* =====================================================
    إضافة طلب
-========================================================= */
+===================================================== */
 
 async function addOrder(){
 
-const customerId=
-document.getElementById("orderCustomer").value;
+const customerId =
+document
+.getElementById("orderCustomer")
+.value;
 
-const receiverName=
-document.getElementById("receiverName")
+const receiverName =
+document
+.getElementById("receiverName")
 .value.trim();
 
-const receiverPhone=
-document.getElementById("receiverPhone")
+const receiverPhone =
+document
+.getElementById("receiverPhone")
 .value.trim();
 
-const receiverAddress=
-document.getElementById("receiverAddress")
+const receiverAddress =
+document
+.getElementById("receiverAddress")
 .value.trim();
 
-const deliveryFee=
+const deliveryFee =
 Number(
-document.getElementById("deliveryFee").value||0
+document
+.getElementById("deliveryFee")
+.value || 0
 );
 
-const paidAmount=
+const paidAmount =
 Number(
-document.getElementById("paidAmount").value||0
+document
+.getElementById("paidAmount")
+.value || 0
 );
 
-const details=
-document.getElementById("orderDetails")
+const details =
+document
+.getElementById("orderDetails")
 .value.trim();
 
-const notes=
-document.getElement
+const notes =
+document
+.getElementById("orderNotes")
+.value.trim();
+
+
+if(!customerId){
+
+alert("اختر العميل أولًا");
+
+return;
+
+}
+
+if(!receiverName){
+
+alert("أدخل اسم المستلم");
+
+return;
+
+}
+
+if(deliveryFee <= 0){
+
+alert("أدخل أجرة الديلفري");
+
+return;
+
+}
+
+if(paidAmount < 0){
+
+alert("المبلغ المدفوع غير صحيح");
+
+return;
+
+}
+
+if(paidAmount > deliveryFee){
+
+alert(
+"المبلغ المدفوع لا يمكن أن يكون أكبر من أجرة الديلفري"
+);
+
+return;
+
+}
+
+
+const debt =
+deliveryFee - paidAmount;
+
+
+let status =
+"debt";
+
+if(debt === 0)
+status = "paid";
+else if(paidAmount > 0)
+status = "partial";
+
+
+try{
+
+const {data,error} =
+await db
+.from("orders")
+.insert({
+
+customer_id:customerId,
+
+receiver_name:receiverName,
+
+receiver_phone:
+receiverPhone || null,
+
+receiver_address:
+receiverAddress || null,
+
+delivery_fee:deliveryFee,
+
+paid_amount:paidAmount,
+
+debt_amount:debt,
+
+status:status,
+
+details:details || null,
+
+notes:notes || null
+
+})
+.select()
+.single();
+
+
+if(error)
+throw error;
+
+
+orders.unshift(data);
+
+
+clearOrderForm();
+
+updateDashboard();
+
+renderOrders();
+
+renderCustomers();
+
+renderReports();
+
+
+alert("تم حفظ الطل
