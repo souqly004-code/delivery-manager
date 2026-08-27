@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -5,6 +6,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#2563eb">
 <title>مدير الديلفري</title>
+
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 *{
@@ -20,8 +24,8 @@ body{
 
 header{
     background:#2563eb;
-    color:#fff;
-    padding:18px 15px;
+    color:white;
+    padding:17px 15px;
     text-align:center;
     position:sticky;
     top:0;
@@ -56,7 +60,7 @@ header h1{
 }
 
 .card{
-    background:#fff;
+    background:white;
     border-radius:15px;
     padding:16px;
     box-shadow:0 2px 8px rgba(0,0,0,.08);
@@ -73,7 +77,7 @@ header h1{
 }
 
 .form{
-    background:#fff;
+    background:white;
     border-radius:15px;
     padding:16px;
     margin-bottom:15px;
@@ -98,7 +102,7 @@ textarea{
     border:1px solid #d5d9e2;
     border-radius:10px;
     font-size:16px;
-    background:#fff;
+    background:white;
 }
 
 textarea{
@@ -120,22 +124,22 @@ button:active{
 
 .primary{
     background:#2563eb;
-    color:#fff;
+    color:white;
 }
 
 .success{
     background:#16a34a;
-    color:#fff;
+    color:white;
 }
 
 .danger{
     background:#dc2626;
-    color:#fff;
+    color:white;
 }
 
 .warning{
     background:#f59e0b;
-    color:#fff;
+    color:white;
 }
 
 .gray{
@@ -156,7 +160,7 @@ button:active{
 }
 
 .item{
-    background:#fff;
+    background:white;
     padding:15px;
     border-radius:14px;
     margin-bottom:10px;
@@ -210,19 +214,19 @@ nav{
     bottom:0;
     left:0;
     right:0;
-    background:#fff;
+    background:white;
     border-top:1px solid #ddd;
     display:grid;
-    grid-template-columns:repeat(5,1fr);
+    grid-template-columns:repeat(6,1fr);
     z-index:30;
 }
 
 nav button{
-    background:#fff;
+    background:white;
     border-radius:0;
     color:#4b5563;
-    font-size:12px;
-    padding:9px 3px;
+    font-size:11px;
+    padding:8px 2px;
 }
 
 nav button.active{
@@ -243,7 +247,7 @@ nav button.active{
 .modal-box{
     max-width:520px;
     margin:30px auto;
-    background:#fff;
+    background:white;
     border-radius:16px;
     padding:18px;
 }
@@ -272,9 +276,51 @@ hr{
     color:#6b7280;
 }
 
+.loading{
+    text-align:center;
+    padding:30px;
+    color:#666;
+}
+
+.status{
+    position:fixed;
+    top:70px;
+    left:10px;
+    right:10px;
+    max-width:500px;
+    margin:auto;
+    z-index:200;
+    padding:12px;
+    border-radius:10px;
+    text-align:center;
+    display:none;
+    font-weight:bold;
+}
+
+.status.successStatus{
+    background:#dcfce7;
+    color:#166534;
+}
+
+.status.errorStatus{
+    background:#fee2e2;
+    color:#991b1b;
+}
+
 @media(min-width:650px){
     .cards{
         grid-template-columns:repeat(4,1fr);
+    }
+}
+
+@media(max-width:420px){
+    nav button{
+        font-size:10px;
+    }
+
+    .container{
+        padding-left:10px;
+        padding-right:10px;
     }
 }
 </style>
@@ -286,12 +332,11 @@ hr{
     <h1>🚚 مدير الديلفري</h1>
 </header>
 
+<div id="status" class="status"></div>
+
 <div class="container">
 
-<!-- =====================================================
-     الرئيسية
-===================================================== -->
-
+<!-- الرئيسية -->
 <section id="home" class="page active">
 
 <div class="cards">
@@ -317,7 +362,6 @@ hr{
 </div>
 
 </div>
-
 
 <div class="form">
 
@@ -350,7 +394,6 @@ hr{
 
 </div>
 
-
 <div class="form">
 
 <h2>⚡ إجراءات سريعة</h2>
@@ -369,7 +412,7 @@ onclick="showPage('customersPage')">
 
 <button class="warning"
 onclick="showPage('expensesPage')">
-💸 إضافة مصروف
+💸 مصروف
 </button>
 
 </div>
@@ -379,16 +422,12 @@ onclick="showPage('expensesPage')">
 </section>
 
 
-<!-- =====================================================
-     إضافة طلب
-===================================================== -->
-
+<!-- إضافة طلب -->
 <section id="addOrderPage" class="page">
 
 <div class="form">
 
 <h2>📦 إضافة طلب جديد</h2>
-
 
 <label>العميل</label>
 
@@ -408,16 +447,13 @@ onclick="openCustomerModal()">
 
 </div>
 
-
 <div id="customerBalanceBox"></div>
-
 
 <label>اسم المستلم</label>
 
 <input
 id="receiverName"
 placeholder="اسم الشخص الذي سيستلم الطلب">
-
 
 <label>هاتف المستلم</label>
 
@@ -426,13 +462,11 @@ id="receiverPhone"
 type="tel"
 placeholder="رقم الهاتف">
 
-
 <label>عنوان المستلم</label>
 
 <textarea
 id="receiverAddress"
 placeholder="عنوان المستلم"></textarea>
-
 
 <label>قيمة الطلب</label>
 
@@ -444,7 +478,6 @@ min="0"
 placeholder="0"
 oninput="calculateNewDebt()">
 
-
 <label>المبلغ المدفوع</label>
 
 <input
@@ -453,9 +486,7 @@ type="number"
 step="0.01"
 min="0"
 value="0"
-placeholder="0"
 oninput="calculateNewDebt()">
-
 
 <label>أجرة الديلفري</label>
 
@@ -464,14 +495,12 @@ id="deliveryFee"
 type="number"
 step="0.01"
 min="0"
-value="0"
-placeholder="0">
-
+value="0">
 
 <div class="balance debtbox">
 
 <div class="row">
-<span>الدين الناتج عن الطلب</span>
+<span>دين الطلب</span>
 <b class="debt" id="newDebt">0</b>
 </div>
 
@@ -487,20 +516,17 @@ placeholder="0">
 
 </div>
 
-
 <label>تفاصيل الطلب</label>
 
 <textarea
 id="orderDetails"
 placeholder="مثال: 2 وجبة + مشروب"></textarea>
 
-
 <label>ملاحظات</label>
 
 <textarea
 id="orderNotes"
 placeholder="ملاحظات إضافية"></textarea>
-
 
 <div class="actions">
 
@@ -521,10 +547,7 @@ onclick="clearOrderForm()">
 </section>
 
 
-<!-- =====================================================
-     الطلبات
-===================================================== -->
-
+<!-- الطلبات -->
 <section id="ordersPage" class="page">
 
 <div class="form">
@@ -554,10 +577,7 @@ onchange="renderOrders()">
 </section>
 
 
-<!-- =====================================================
-     العملاء
-===================================================== -->
-
+<!-- العملاء -->
 <section id="customersPage" class="page">
 
 <div class="form">
@@ -568,9 +588,7 @@ onchange="renderOrders()">
 class="primary"
 style="width:100%"
 onclick="openCustomerModal()">
-
 ➕ إضافة عميل جديد
-
 </button>
 
 <br><br>
@@ -587,10 +605,7 @@ oninput="renderCustomers()">
 </section>
 
 
-<!-- =====================================================
-     المصاريف
-===================================================== -->
-
+<!-- المصاريف -->
 <section id="expensesPage" class="page">
 
 <div class="form">
@@ -620,9 +635,7 @@ placeholder="0">
 class="primary"
 style="width:100%;margin-top:12px"
 onclick="addExpense()">
-
 💾 حفظ المصروف
-
 </button>
 
 </div>
@@ -632,10 +645,7 @@ onclick="addExpense()">
 </section>
 
 
-<!-- =====================================================
-     التقارير
-===================================================== -->
-
+<!-- التقارير -->
 <section id="reportsPage" class="page">
 
 <div class="form">
@@ -673,59 +683,16 @@ onclick="addExpense()">
 </div>
 
 <div class="row">
-<span>صافي أجرة الديلفري</span>
+<span>صافي الربح</span>
 <b id="reportProfit">0</b>
 </div>
-
-</div>
-
-
-<div class="form">
-
-<h2>💾 النسخ الاحتياطي</h2>
-
-<p class="small">
-احتفظ بنسخة احتياطية بشكل دوري حتى لا تفقد بياناتك.
-</p>
-
-<div class="actions">
-
-<button
-class="success"
-onclick="backup()">
-⬇️ تصدير البيانات
-</button>
-
-<button
-class="gray"
-onclick="document.getElementById('restoreFile').click()">
-⬆️ استرجاع البيانات
-</button>
-
-<button
-class="danger"
-onclick="deleteAll()">
-🗑️ حذف الكل
-</button>
-
-</div>
-
-<input
-id="restoreFile"
-type="file"
-accept=".json"
-style="display:none"
-onchange="restore(event)">
 
 </div>
 
 </section>
 
 
-<!-- =====================================================
-     الإعدادات
-===================================================== -->
-
+<!-- الإعدادات -->
 <section id="settingsPage" class="page">
 
 <div class="form">
@@ -748,15 +715,18 @@ onchange="changeCurrency()">
 
 <div class="form">
 
-<h2>💾 التخزين</h2>
+<h2>☁️ قاعدة البيانات</h2>
 
 <p>
-البيانات تحفظ تلقائيًا على هذا الجهاز باستخدام تخزين المتصفح.
+حالة الاتصال بقاعدة البيانات:
 </p>
 
+<b id="databaseStatus">جاري الاتصال...</b>
+
+<hr>
+
 <p class="small">
-إذا قمت بمسح بيانات المتصفح أو استخدمت هاتفًا آخر،
-استخدم النسخ الاحتياطي والاسترجاع.
+يتم حفظ العملاء والطلبات والدفعات والمصاريف في قاعدة بيانات Supabase.
 </p>
 
 </div>
@@ -766,9 +736,7 @@ onchange="changeCurrency()">
 </div>
 
 
-<!-- =====================================================
-     القائمة السفلية
-===================================================== -->
+<!-- القائمة السفلية -->
 
 <nav>
 
@@ -798,6 +766,12 @@ onclick="showPage('customersPage')">
 </button>
 
 <button
+id="nav-expensesPage"
+onclick="showPage('expensesPage')">
+💸<br>المصاريف
+</button>
+
+<button
 id="nav-reportsPage"
 onclick="showPage('reportsPage')">
 📊<br>التقارير
@@ -806,9 +780,7 @@ onclick="showPage('reportsPage')">
 </nav>
 
 
-<!-- =====================================================
-     نافذة إضافة عميل
-===================================================== -->
+<!-- نافذة العميل -->
 
 <div
 id="customerModal"
@@ -858,9 +830,7 @@ onclick="closeCustomerModal()">
 </div>
 
 
-<!-- =====================================================
-     نافذة الدفع
-===================================================== -->
+<!-- نافذة الدفع -->
 
 <div
 id="paymentModal"
@@ -902,9 +872,7 @@ onclick="closePaymentModal()">
 </div>
 
 
-<!-- =====================================================
-     نافذة كشف الحساب
-===================================================== -->
+<!-- كشف الحساب -->
 
 <div
 id="statementModal"
@@ -936,28 +904,30 @@ onclick="closeStatementModal()">
 <script>
 
 /* =====================================================
+   إعداد Supabase
+===================================================== */
+
+const SUPABASE_URL =
+"https://iphvcddnvhilokwkwfyu.supabase.co";
+
+const SUPABASE_KEY =
+"sb_publishable_H8LcFHEvHE5w0_eFx-NTTA_ztbs5PYq";
+
+const db =
+window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+);
+
+
+/* =====================================================
    البيانات
 ===================================================== */
 
-let customers =
-JSON.parse(
-localStorage.getItem("delivery_customers") || "[]"
-);
-
-let orders =
-JSON.parse(
-localStorage.getItem("delivery_orders") || "[]"
-);
-
-let expenses =
-JSON.parse(
-localStorage.getItem("delivery_expenses") || "[]"
-);
-
-let payments =
-JSON.parse(
-localStorage.getItem("delivery_payments") || "[]"
-);
+let customers = [];
+let orders = [];
+let expenses = [];
+let payments = [];
 
 let currency =
 localStorage.getItem("delivery_currency") || "₪";
@@ -966,37 +936,40 @@ let paymentCustomerId = null;
 
 
 /* =====================================================
-   حفظ البيانات
+   إشعارات
 ===================================================== */
 
-function saveData(){
+function showStatus(message,type="success"){
 
-localStorage.setItem(
-"delivery_customers",
-JSON.stringify(customers)
-);
+let box=document.getElementById("status");
 
-localStorage.setItem(
-"delivery_orders",
-JSON.stringify(orders)
-);
+box.textContent=message;
 
-localStorage.setItem(
-"delivery_expenses",
-JSON.stringify(expenses)
-);
+box.className=
+"status "+
+(type==="error"
+?"errorStatus"
+:"successStatus");
 
-localStorage.setItem(
-"delivery_payments",
-JSON.stringify(payments)
-);
+box.style.display="block";
 
-localStorage.setItem(
-"delivery_currency",
-currency
-);
+setTimeout(function(){
 
-updateDashboard();
+box.style.display="none";
+
+},2500);
+
+}
+
+
+/* =====================================================
+   توليد ID
+===================================================== */
+
+function newId(){
+
+return Date.now() +
+Math.floor(Math.random()*1000);
 
 }
 
@@ -1007,7 +980,8 @@ updateDashboard();
 
 function money(value){
 
-return Number(value || 0).toFixed(2) + " " + currency;
+return Number(value || 0).toFixed(2)
++ " " + currency;
 
 }
 
@@ -1016,8 +990,12 @@ function changeCurrency(){
 currency =
 document.getElementById("currency").value;
 
-saveData();
+localStorage.setItem(
+"delivery_currency",
+currency
+);
 
+updateDashboard();
 renderOrders();
 renderCustomers();
 renderExpenses();
@@ -1032,10 +1010,10 @@ renderReports();
 
 function today(){
 
-let d = new Date();
+let d=new Date();
 
-return d.getFullYear() + "-" +
-String(d.getMonth()+1).padStart(2,"0") + "-" +
+return d.getFullYear()+"-"+
+String(d.getMonth()+1).padStart(2,"0")+"-"+
 String(d.getDate()).padStart(2,"0");
 
 }
@@ -1043,6 +1021,100 @@ String(d.getDate()).padStart(2,"0");
 function formatDate(date){
 
 return new Date(date).toLocaleString("ar");
+
+}
+
+
+/* =====================================================
+   تحميل البيانات من Supabase
+===================================================== */
+
+async function loadData(){
+
+try{
+
+document.getElementById("databaseStatus")
+.textContent="جاري تحميل البيانات...";
+
+let result =
+await Promise.all([
+
+db
+.from("customers")
+.select("*")
+.order("created_at",{ascending:false}),
+
+db
+.from("orders")
+.select("*")
+.order("created_at",{ascending:false}),
+
+db
+.from("expenses")
+.select("*")
+.order("created_at",{ascending:false}),
+
+db
+.from("payments")
+.select("*")
+.order("created_at",{ascending:false})
+
+]);
+
+let customerResult=result[0];
+let orderResult=result[1];
+let expenseResult=result[2];
+let paymentResult=result[3];
+
+if(customerResult.error)
+throw customerResult.error;
+
+if(orderResult.error)
+throw orderResult.error;
+
+if(expenseResult.error)
+throw expenseResult.error;
+
+if(paymentResult.error)
+throw paymentResult.error;
+
+
+customers =
+customerResult.data || [];
+
+orders =
+orderResult.data || [];
+
+expenses =
+expenseResult.data || [];
+
+payments =
+paymentResult.data || [];
+
+
+document.getElementById("databaseStatus")
+.textContent="متصل ✅";
+
+populateCustomerSelect();
+updateDashboard();
+renderCustomers();
+renderOrders();
+renderExpenses();
+renderReports();
+
+}catch(error){
+
+console.error(error);
+
+document.getElementById("databaseStatus")
+.textContent="خطأ في الاتصال ❌";
+
+showStatus(
+"حدث خطأ في تحميل قاعدة البيانات",
+"error"
+);
+
+}
 
 }
 
@@ -1056,50 +1128,62 @@ function showPage(id){
 document
 .querySelectorAll(".page")
 .forEach(function(page){
+
 page.classList.remove("active");
+
 });
 
 let page=document.getElementById(id);
 
 if(page){
+
 page.classList.add("active");
+
 }
 
 document
 .querySelectorAll("nav button")
 .forEach(function(button){
+
 button.classList.remove("active");
+
 });
 
 let nav=document.getElementById("nav-"+id);
 
 if(nav){
+
 nav.classList.add("active");
+
 }
 
-if(id==="home"){
+if(id==="home")
 updateDashboard();
-}
 
 if(id==="addOrderPage"){
+
 populateCustomerSelect();
 showSelectedCustomerBalance();
+
 }
 
-if(id==="ordersPage"){
+if(id==="ordersPage")
 renderOrders();
-}
 
-if(id==="customersPage"){
+if(id==="customersPage")
 renderCustomers();
-}
 
-if(id==="expensesPage"){
+if(id==="expensesPage")
 renderExpenses();
-}
 
-if(id==="reportsPage"){
+if(id==="reportsPage")
 renderReports();
+
+if(id==="settingsPage"){
+
+document.getElementById("currency")
+.value=currency;
+
 }
 
 window.scrollTo(0,0);
@@ -1108,13 +1192,12 @@ window.scrollTo(0,0);
 
 
 /* =====================================================
-   نافذة العميل
+   العميل
 ===================================================== */
 
 function openCustomerModal(){
 
-document
-.getElementById("customerModal")
+document.getElementById("customerModal")
 .style.display="block";
 
 document
@@ -1125,101 +1208,95 @@ document
 
 function closeCustomerModal(){
 
-document
-.getElementById("customerModal")
+document.getElementById("customerModal")
 .style.display="none";
 
-document
-.getElementById("newCustomerName")
-.value="";
-
-document
-.getElementById("newCustomerPhone")
-.value="";
-
-document
-.getElementById("newCustomerNotes")
-.value="";
+document.getElementById("newCustomerName").value="";
+document.getElementById("newCustomerPhone").value="";
+document.getElementById("newCustomerNotes").value="";
 
 }
 
 
-/* =====================================================
-   إضافة عميل
-===================================================== */
+async function addCustomer(){
 
-function addCustomer(){
-
-let name =
-document
-.getElementById("newCustomerName")
+let name=
+document.getElementById("newCustomerName")
 .value.trim();
 
-let phone =
-document
-.getElementById("newCustomerPhone")
+let phone=
+document.getElementById("newCustomerPhone")
 .value.trim();
 
-let notes =
-document
-.getElementById("newCustomerNotes")
+let notes=
+document.getElementById("newCustomerNotes")
 .value.trim();
 
 if(!name){
 
 alert("أدخل اسم العميل");
-
 return;
 
 }
 
-let exists =
+let exists=
 customers.some(function(c){
 
-return c.name.trim().toLowerCase() ===
-name.toLowerCase();
+return c.name.trim().toLowerCase()
+===name.toLowerCase();
 
 });
 
 if(exists){
 
 alert("هذا العميل موجود بالفعل");
-
 return;
 
 }
 
 let customer={
 
-id:Date.now(),
+id:newId(),
 
 name:name,
 
 phone:phone,
 
-notes:notes,
-
-createdAt:new Date().toISOString()
+notes:notes
 
 };
 
-customers.push(customer);
 
-saveData();
+let {data,error}=
+await db
+.from("customers")
+.insert(customer)
+.select()
+.single();
+
+if(error){
+
+console.error(error);
+
+alert("حدث خطأ أثناء حفظ العميل");
+return;
+
+}
+
+customers.unshift(data);
 
 closeCustomerModal();
 
 populateCustomerSelect();
+renderCustomers();
+updateDashboard();
 
-document
-.getElementById("orderCustomer")
-.value=customer.id;
+document.getElementById("orderCustomer")
+.value=data.id;
 
 showSelectedCustomerBalance();
 
-renderCustomers();
-
-alert("تمت إضافة العميل بنجاح ✅");
+showStatus("تمت إضافة العميل بنجاح ✅");
 
 }
 
@@ -1230,12 +1307,11 @@ alert("تمت إضافة العميل بنجاح ✅");
 
 function populateCustomerSelect(){
 
-let select =
+let select=
 document.getElementById("orderCustomer");
 
-if(!select){
+if(!select)
 return;
-}
 
 let oldValue=select.value;
 
@@ -1256,41 +1332,54 @@ select.appendChild(option);
 
 if(
 customers.some(function(c){
+
 return String(c.id)===String(oldValue);
+
 })
 ){
+
 select.value=oldValue;
+
 }
 
 }
 
 
 /* =====================================================
-   حساب رصيد العميل
+   رصيد العميل
 ===================================================== */
 
 function customerBalance(id){
 
-if(!id){
+if(!id)
 return 0;
-}
 
-let orderDebt =
+let orderDebt=
 orders
 .filter(function(order){
-return String(order.customerId)===String(id);
+
+return String(order.customer_id)
+===String(id);
+
 })
 .reduce(function(sum,order){
+
 return sum+Number(order.debt||0);
+
 },0);
 
-let customerPayments =
+let customerPayments=
 payments
 .filter(function(payment){
-return String(payment.customerId)===String(id);
+
+return String(payment.customer_id)
+===String(id);
+
 })
 .reduce(function(sum,payment){
+
 return sum+Number(payment.amount||0);
+
 },0);
 
 return Math.max(
@@ -1301,35 +1390,30 @@ orderDebt-customerPayments
 }
 
 
-/* =====================================================
-   عرض رصيد العميل
-===================================================== */
-
 function showSelectedCustomerBalance(){
 
 let select=
 document.getElementById("orderCustomer");
 
-if(!select){
-return;
-}
-
-let id=select.value;
-
 let box=
 document.getElementById("customerBalanceBox");
+
+if(!select)
+return;
+
+let id=select.value;
 
 if(!id){
 
 box.innerHTML="";
 
-document
-.getElementById("previousBalance")
+document.getElementById("previousBalance")
 .textContent=money(0);
 
-document
-.getElementById("newCustomerBalance")
+document.getElementById("newCustomerBalance")
 .textContent=money(0);
+
+calculateNewDebt();
 
 return;
 
@@ -1339,16 +1423,15 @@ let balance=customerBalance(id);
 
 box.innerHTML=
 `
-<div class="balance ${balance>0?'debtbox':''}">
+<div class="balance ${balance>0?"debtbox":""}">
 الرصيد الحالي للعميل:
-<b class="${balance>0?'debt':'paid'}">
+<b class="${balance>0?"debt":"paid"}">
 ${money(balance)}
 </b>
 </div>
 `;
 
-document
-.getElementById("previousBalance")
+document.getElementById("previousBalance")
 .textContent=money(balance);
 
 calculateNewDebt();
@@ -1357,39 +1440,1323 @@ calculateNewDebt();
 
 
 /* =====================================================
-   حساب الدين الجديد
+   الدين الجديد
 ===================================================== */
 
 function calculateNewDebt(){
 
-let price =
+let price=
 Number(
-document.getElementById("orderPrice").value || 0
+document.getElementById("orderPrice").value||0
 );
 
-let paid =
+let paid=
 Number(
-document.getElementById("orderPaid").value || 0
+document.getElementById("orderPaid").value||0
 );
 
-let debt =
-Math.max(0,price-paid);
+let debt=Math.max(0,price-paid);
 
-let customerId =
+let customerId=
 document.getElementById("orderCustomer").value;
 
-let previous =
+let previous=
 customerBalance(customerId);
 
-document
-.getElementById("newDebt")
+document.getElementById("newDebt")
 .textContent=money(debt);
 
-document
-.getElementById("previousBalance")
+document.getElementById("previousBalance")
 .textContent=money(previous);
 
-document
-.getElementById("newCustomerBalance")
+document.getElementById("newCustomerBalance")
 .textContent=
-money(previou
+money(previous+debt);
+
+}
+
+
+/* =====================================================
+   إضافة طلب
+===================================================== */
+
+async function addOrder(){
+
+let customerId=
+document.getElementById("orderCustomer").value;
+
+let receiverName=
+document.getElementById("receiverName").value.trim();
+
+let receiverPhone=
+document.getElementById("receiverPhone").value.trim();
+
+let receiverAddress=
+document.getElementById("receiverAddress").value.trim();
+
+let price=
+Number(
+document.getElementById("orderPrice").value||0
+);
+
+let paid=
+Number(
+document.getElementById("orderPaid").value||0
+);
+
+let delivery=
+Number(
+document.getElementById("deliveryFee").value||0
+);
+
+let details=
+document.getElementById("orderDetails").value.trim();
+
+let notes=
+document.getElementById("orderNotes").value.trim();
+
+
+if(!customerId){
+
+alert("اختر العميل أولًا");
+return;
+
+}
+
+if(!receiverName){
+
+alert("أدخل اسم المستلم");
+return;
+
+}
+
+if(price<=0){
+
+alert("أدخل قيمة الطلب");
+return;
+
+}
+
+if(paid<0 || paid>price){
+
+alert("المبلغ المدفوع غير صحيح");
+return;
+
+}
+
+if(delivery<0){
+
+alert("أجرة الديلفري غير صحيحة");
+return;
+
+}
+
+
+let order={
+
+id:newId(),
+
+customer_id:Number(customerId),
+
+receiver_name:receiverName,
+
+receiver_phone:receiverPhone,
+
+receiver_address:receiverAddress,
+
+price:price,
+
+paid:paid,
+
+delivery:delivery,
+
+debt:price-paid,
+
+details:details,
+
+notes:notes
+
+};
+
+
+let {data,error}=
+await db
+.from("orders")
+.insert(order)
+.select()
+.single();
+
+if(error){
+
+console.error(error);
+
+alert("حدث خطأ أثناء حفظ الطلب");
+return;
+
+}
+
+orders.unshift(data);
+
+updateDashboard();
+
+renderReports();
+
+clearOrderForm();
+
+showStatus("تم حفظ الطلب بنجاح ✅");
+
+showPage("ordersPage");
+
+}
+
+
+/* =====================================================
+   مسح نموذج الطلب
+===================================================== */
+
+function clearOrderForm(){
+
+document.getElementById("orderCustomer").value="";
+document.getElementById("receiverName").value="";
+document.getElementById("receiverPhone").value="";
+document.getElementById("receiverAddress").value="";
+document.getElementById("orderPrice").value="";
+document.getElementById("orderPaid").value="0";
+document.getElementById("deliveryFee").value="0";
+document.getElementById("orderDetails").value="";
+document.getElementById("orderNotes").value="";
+
+document.getElementById("customerBalanceBox")
+.innerHTML="";
+
+document.getElementById("newDebt")
+.textContent=money(0);
+
+document.getElementById("previousBalance")
+.textContent=money(0);
+
+document.getElementById("newCustomerBalance")
+.textContent=money(0);
+
+}
+
+
+/* =====================================================
+   الطلبات
+===================================================== */
+
+function renderOrders(){
+
+let list=
+document.getElementById("ordersList");
+
+let search=
+(
+document.getElementById("orderSearch")?.value||""
+).toLowerCase();
+
+let filter=
+document.getElementById("orderFilter")?.value||"all";
+
+let data=
+orders.filter(function(order){
+
+let customer=
+customers.find(function(c){
+
+return String(c.id)===
+String(order.customer_id);
+
+});
+
+let customerName=
+customer?customer.name:"عميل محذوف";
+
+let receiver=
+(order.receiver_name||"").toLowerCase();
+
+let phone=
+(order.receiver_phone||"").toLowerCase();
+
+let matchesSearch=
+customerName.toLowerCase().includes(search)
+||
+receiver.includes(search)
+||
+phone.includes(search);
+
+let matchesFilter=true;
+
+if(filter==="today"){
+
+matchesFilter=
+String(order.created_at).slice(0,10)===today();
+
+}
+
+if(filter==="debt"){
+
+matchesFilter=
+Number(order.debt)>0;
+
+}
+
+return matchesSearch && matchesFilter;
+
+});
+
+
+if(!data.length){
+
+list.innerHTML=
+'<div class="empty">لا توجد طلبات.</div>';
+
+return;
+
+}
+
+
+list.innerHTML=
+data.map(function(order){
+
+let customer=
+customers.find(function(c){
+
+return String(c.id)===
+String(order.customer_id);
+
+});
+
+let customerName=
+customer?customer.name:"عميل محذوف";
+
+return `
+
+<div class="item">
+
+<h3>📦 طلب #${order.id}</h3>
+
+<div class="row">
+<span>العميل</span>
+<b>${escapeHtml(customerName)}</b>
+</div>
+
+<div class="row">
+<span>المستلم</span>
+<b>${escapeHtml(order.receiver_name)}</b>
+</div>
+
+${
+order.receiver_phone
+?
+`<div class="row">
+<span>هاتف المستلم</span>
+<span>${escapeHtml(order.receiver_phone)}</span>
+</div>`
+:""
+}
+
+${
+order.receiver_address
+?
+`<div class="row">
+<span>العنوان</span>
+<span>${escapeHtml(order.receiver_address)}</span>
+</div>`
+:""
+}
+
+<hr>
+
+<div class="row">
+<span>قيمة الطلب</span>
+<b>${money(order.price)}</b>
+</div>
+
+<div class="row">
+<span>المدفوع</span>
+<b class="paid">${money(order.paid)}</b>
+</div>
+
+<div class="row">
+<span>الدين</span>
+<b class="${order.debt>0?"debt":"paid"}">
+${money(order.debt)}
+</b>
+</div>
+
+<div class="row">
+<span>أجرة الديلفري</span>
+<b>${money(order.delivery)}</b>
+</div>
+
+${
+order.details
+?
+`<p>📝 ${escapeHtml(order.details)}</p>`
+:""
+}
+
+${
+order.notes
+?
+`<p>📌 ${escapeHtml(order.notes)}</p>`
+:""
+}
+
+<div class="row">
+<span>التاريخ</span>
+<span>${formatDate(order.created_at)}</span>
+</div>
+
+<div class="actions">
+
+${
+order.debt>0
+?
+`<button
+class="success"
+onclick="openPaymentForCustomer(${order.customer_id})">
+💵 تسجيل دفعة
+</button>`
+:""
+}
+
+<button
+class="danger"
+onclick="deleteOrder(${order.id})">
+🗑️ حذف
+</button>
+
+</div>
+
+</div>
+
+`;
+
+}).join("");
+
+}
+
+
+/* =====================================================
+   حذف طلب
+===================================================== */
+
+async function deleteOrder(id){
+
+if(!confirm("هل تريد حذف هذا الطلب؟"))
+return;
+
+let {error}=
+await db
+.from("orders")
+.delete()
+.eq("id",id);
+
+if(error){
+
+console.error(error);
+
+alert("حدث خطأ أثناء حذف الطلب");
+return;
+
+}
+
+orders=
+orders.filter(function(order){
+
+return Number(order.id)!==Number(id);
+
+});
+
+renderOrders();
+renderCustomers();
+updateDashboard();
+renderReports();
+
+showStatus("تم حذف الطلب");
+
+}
+
+
+/* =====================================================
+   العملاء
+===================================================== */
+
+function renderCustomers(){
+
+let list=
+document.getElementById("customersList");
+
+let search=
+(
+document.getElementById("customerSearch")?.value||""
+).toLowerCase();
+
+let data=
+customers.filter(function(customer){
+
+return customer.name
+.toLowerCase()
+.includes(search);
+
+});
+
+
+if(!data.length){
+
+list.innerHTML=
+'<div class="empty">لا يوجد عملاء.</div>';
+
+return;
+
+}
+
+
+list.innerHTML=
+data.map(function(customer){
+
+let balance=
+customerBalance(customer.id);
+
+let count=
+orders.filter(function(order){
+
+return String(order.customer_id)===
+String(customer.id);
+
+}).length;
+
+return `
+
+<div class="item">
+
+<h3>👤 ${escapeHtml(customer.name)}</h3>
+
+${
+customer.phone
+?
+`<div>📞 ${escapeHtml(customer.phone)}</div>`
+:""
+}
+
+<div class="row">
+<span>عدد الطلبات</span>
+<b>${count}</b>
+</div>
+
+<div class="row">
+<span>الرصيد</span>
+<b class="${balance>0?"debt":"paid"}">
+${money(balance)}
+</b>
+</div>
+
+${
+customer.notes
+?
+`<p>📝 ${escapeHtml(customer.notes)}</p>`
+:""
+}
+
+<div class="actions">
+
+<button
+class="primary"
+onclick="openStatement(${customer.id})">
+📜 كشف الحساب
+</button>
+
+${
+balance>0
+?
+`<button
+class="success"
+onclick="openPaymentForCustomer(${customer.id})">
+💵 دفعة
+</button>`
+:""
+}
+
+<button
+class="danger"
+onclick="deleteCustomer(${customer.id})">
+🗑️ حذف
+</button>
+
+</div>
+
+</div>
+
+`;
+
+}).join("");
+
+}
+
+
+/* =====================================================
+   حذف العميل
+===================================================== */
+
+async function deleteCustomer(id){
+
+let hasOrders=
+orders.some(function(order){
+
+return String(order.customer_id)===
+String(id);
+
+});
+
+if(hasOrders){
+
+if(!confirm(
+"هذا العميل لديه طلبات. سيتم حذف العميل فقط وستبقى الطلبات. هل تريد المتابعة؟"
+))
+return;
+
+}
+
+else{
+
+if(!confirm("هل تريد حذف العميل؟"))
+return;
+
+}
+
+let {error}=
+await db
+.from("customers")
+.delete()
+.eq("id",id);
+
+if(error){
+
+console.error(error);
+
+alert("حدث خطأ أثناء حذف العميل");
+return;
+
+}
+
+customers=
+customers.filter(function(customer){
+
+return String(customer.id)!==
+String(id);
+
+});
+
+renderCustomers();
+populateCustomerSelect();
+
+showStatus("تم حذف العميل");
+
+}
+
+
+/* =====================================================
+   الدفع
+===================================================== */
+
+function openPaymentForCustomer(id){
+
+let customer=
+customers.find(function(c){
+
+return String(c.id)===String(id);
+
+});
+
+if(!customer)
+return;
+
+paymentCustomerId=id;
+
+let balance=
+customerBalance(id);
+
+document.getElementById("paymentInfo")
+.innerHTML=
+`
+<div class="balance debtbox">
+
+<div class="row">
+<span>العميل</span>
+<b>${escapeHtml(customer.name)}</b>
+</div>
+
+<div class="row">
+<span>الرصيد الحالي</span>
+<b class="debt">${money(balance)}</b>
+</div>
+
+</div>
+`;
+
+document.getElementById("paymentAmount")
+.value="";
+
+document.getElementById("paymentModal")
+.style.display="block";
+
+}
+
+
+function closePaymentModal(){
+
+document.getElementById("paymentModal")
+.style.display="none";
+
+paymentCustomerId=null;
+
+}
+
+
+async function payCustomer(){
+
+if(!paymentCustomerId)
+return;
+
+let amount=
+Number(
+document.getElementById("paymentAmount")
+.value||0
+);
+
+let balance=
+customerBalance(paymentCustomerId);
+
+if(amount<=0){
+
+alert("أدخل مبلغًا صحيحًا");
+return;
+
+}
+
+if(amount>balance){
+
+alert("المبلغ أكبر من الدين الحالي");
+return;
+
+}
+
+let payment={
+
+id:newId(),
+
+customer_id:Number(paymentCustomerId),
+
+amount:amount
+
+};
+
+let {data,error}=
+await db
+.from("payments")
+.insert(payment)
+.select()
+.single();
+
+if(error){
+
+console.error(error);
+
+alert("حدث خطأ أثناء حفظ الدفعة");
+return;
+
+}
+
+payments.unshift(data);
+
+closePaymentModal();
+
+renderCustomers();
+renderOrders();
+renderReports();
+updateDashboard();
+
+showStatus("تم تسجيل الدفعة بنجاح ✅");
+
+}
+
+
+/* =====================================================
+   كشف الحساب
+===================================================== */
+
+function openStatement(id){
+
+let customer=
+customers.find(function(c){
+
+return String(c.id)===String(id);
+
+});
+
+if(!customer)
+return;
+
+let customerOrders=
+orders.filter(function(order){
+
+return String(order.customer_id)===
+String(id);
+
+});
+
+let customerPayments=
+payments.filter(function(payment){
+
+return String(payment.customer_id)===
+String(id);
+
+});
+
+let balance=
+customerBalance(id);
+
+document.getElementById("statementTitle")
+.textContent=
+"كشف حساب: "+customer.name;
+
+let html=
+`
+<div class="balance ${balance>0?"debtbox":""}">
+
+<div class="row">
+<span>الرصيد الحالي</span>
+
+<b class="${balance>0?"debt":"paid"}">
+${money(balance)}
+</b>
+
+</div>
+
+</div>
+
+<hr>
+
+<h3>📦 الطلبات</h3>
+`;
+
+if(!customerOrders.length){
+
+html+=
+'<p class="empty">لا توجد طلبات.</p>';
+
+}else{
+
+customerOrders.forEach(function(order){
+
+html+=
+`
+<div class="item">
+
+<div class="row">
+<span>التاريخ</span>
+<span>${formatDate(order.created_at)}</span>
+</div>
+
+<div class="row">
+<span>المستلم</span>
+<span>${escapeHtml(order.receiver_name)}</span>
+</div>
+
+<div class="row">
+<span>قيمة الطلب</span>
+<b>${money(order.price)}</b>
+</div>
+
+<div class="row">
+<span>المدفوع</span>
+<b class="paid">${money(order.paid)}</b>
+</div>
+
+<div class="row">
+<span>دين الطلب</span>
+<b class="debt">${money(order.debt)}</b>
+</div>
+
+</div>
+`;
+
+});
+
+}
+
+html+=`<h3>💵 الدفعات</h3>`;
+
+if(!customerPayments.length){
+
+html+=
+'<p class="empty">لا توجد دفعات.</p>';
+
+}else{
+
+customerPayments.forEach(function(payment){
+
+html+=
+`
+<div class="item">
+
+<div class="row">
+<span>التاريخ</span>
+<span>${formatDate(payment.created_at)}</span>
+</div>
+
+<div class="row">
+<span>الدفعة</span>
+<b class="paid">${money(payment.amount)}</b>
+</div>
+
+</div>
+`;
+
+});
+
+}
+
+document.getElementById("statementContent")
+.innerHTML=html;
+
+document.getElementById("statementModal")
+.style.display="block";
+
+}
+
+
+function closeStatementModal(){
+
+document.getElementById("statementModal")
+.style.display="none";
+
+}
+
+
+/* =====================================================
+   المصاريف
+===================================================== */
+
+async function addExpense(){
+
+let title=
+document.getElementById("expenseTitle")
+.value.trim();
+
+let amount=
+Number(
+document.getElementById("expenseAmount")
+.value||0
+);
+
+let note=
+document.getElementById("expenseNote")
+.value.trim();
+
+if(!title){
+
+alert("أدخل نوع المصروف");
+return;
+
+}
+
+if(amount<=0){
+
+alert("أدخل مبلغًا صحيحًا");
+return;
+
+}
+
+let expense={
+
+id:newId(),
+
+title:title,
+
+amount:amount,
+
+note:note
+
+};
+
+let {data,error}=
+await db
+.from("expenses")
+.insert(expense)
+.select()
+.single();
+
+if(error){
+
+console.error(error);
+
+alert("حدث خطأ أثناء حفظ المصروف");
+return;
+
+}
+
+expenses.unshift(data);
+
+document.getElementById("expenseTitle").value="";
+document.getElementById("expenseAmount").value="";
+document.getElementById("expenseNote").value="";
+
+renderExpenses();
+updateDashboard();
+renderReports();
+
+showStatus("تم حفظ المصروف ✅");
+
+}
+
+
+/* =====================================================
+   عرض المصاريف
+===================================================== */
+
+function renderExpenses(){
+
+let list=
+document.getElementById("expensesList");
+
+if(!expenses.length){
+
+list.innerHTML=
+'<div class="empty">لا توجد مصاريف.</div>';
+
+return;
+
+}
+
+list.innerHTML=
+expenses.map(function(expense){
+
+return `
+<div class="item">
+
+<h3>💸 ${escapeHtml(expense.title)}</h3>
+
+<div class="row">
+<span>المبلغ</span>
+<b class="debt">${money(expense.amount)}</b>
+</div>
+
+<div class="row">
+<span>التاريخ</span>
+<span>${formatDate(expense.created_at)}</span>
+</div>
+
+${
+expense.note
+?
+`<p>📝 ${escapeHtml(expense.note)}</p>`
+:""
+}
+
+<button
+class="danger"
+onclick="deleteExpense(${expense.id})">
+🗑️ حذف
+</button>
+
+</div>
+`;
+
+}).join("");
+
+}
+
+
+/* =====================================================
+   حذف مصروف
+===================================================== */
+
+async function deleteExpense(id){
+
+if(!confirm("هل تريد حذف المصروف؟"))
+return;
+
+let {error}=
+await db
+.from("expenses")
+.delete()
+.eq("id",id);
+
+if(error){
+
+console.error(error);
+
+alert("حدث خطأ أثناء حذف المصروف");
+return;
+
+}
+
+expenses=
+expenses.filter(function(expense){
+
+return Number(expense.id)!==
+Number(id);
+
+});
+
+renderExpenses();
+updateDashboard();
+renderReports();
+
+showStatus("تم حذف المصروف");
+
+}
+
+
+/* =====================================================
+   لوحة التحكم
+===================================================== */
+
+function updateDashboard(){
+
+let allSales=
+orders.reduce(function(sum,order){
+
+return sum+Number(order.price||0);
+
+},0);
+
+let allPaid=
+orders.reduce(function(sum,order){
+
+return sum+Number(order.paid||0);
+
+},0);
+
+let allDelivery=
+orders.reduce(function(sum,order){
+
+return sum+Number(order.delivery||0);
+
+},0);
+
+let allExpenses=
+expenses.reduce(function(sum,expense){
+
+return sum+Number(expense.amount||0);
+
+},0);
+
+let orderDebt=
+orders.reduce(function(sum,order){
+
+return sum+Number(order.debt||0);
+
+},0);
+
+let totalPayments=
+payments.reduce(function(sum,payment){
+
+return sum+Number(payment.amount||0);
+
+},0);
+
+let totalDebt=
+Math.max(
+0,
+orderDebt-totalPayments
+);
+
+let todayOrders=
+orders.filter(function(order){
+
+return String(order.created_at)
+.slice(0,10)===today();
+
+});
+
+let todayIncome=
+todayOrders.reduce(function(sum,order){
+
+return sum+Number(order.paid||0);
+
+},0);
+
+let todayExpenses=
+expenses
+.filter(function(expense){
+
+return String(expense.created_at)
+.slice(0,10)===today();
+
+})
+.reduce(function(sum,expense){
+
+return sum+Number(expense.amount||0);
+
+},0);
+
+document.getElementById("todayIncome")
+.textContent=money(todayIncome);
+
+document.getElementById("todayOrders")
+.textContent=todayOrders.length;
+
+document.getElementById("totalDebt")
+.textContent=money(totalDebt);
+
+document.getElementById("todayExpenses")
+.textContent=money(todayExpenses);
+
+document.getElementById("allSales")
+.textContent=money(allSales);
+
+document.getElementById("allPaid")
+.textContent=money(allPaid);
+
+document.getElementById("allDelivery")
+.textContent=money(allDelivery);
+
+document.getElementById("allExpenses")
+.textContent=money(allExpenses);
+
+document.getElementById("netProfit")
+.textContent=
+money(allDelivery-allExpenses);
+
+}
+
+
+/* =====================================================
+   التقارير
+===================================================== */
+
+function renderReports(){
+
+let sales=
+orders.reduce(function(sum,order){
+
+return sum+Number(order.price||0);
+
+},0);
+
+let paid=
+orders.reduce(function(sum,order){
+
+return sum+Number(order.paid||0);
+
+},0);
+
+let orderDebt=
+orders.reduce(function(sum,order){
+
+return sum+Number(order.debt||0);
+
+},0);
+
+let paymentTotal=
+payments.reduce(function(sum,payment){
+
+return sum+Number(payment.amount||0);
+
+},0);
+
+let debt=
+Math.max(
+0,
+orderDebt-paymentTotal
+);
+
+let delivery=
+orders.reduce(function(sum,order){
+
+return sum+Number(order.delivery||0);
+
+},0);
+
+let exp=
+expenses.reduce(function(sum,expense){
+
+return sum+Number(expense.amount||0);
+
+},0);
+
+document.getElementById("reportOrders")
+.textContent=orders.length;
+
+document.getElementById("reportSales")
+.textContent=money(sales);
+
+document.getElementById("reportPaid")
+.textContent=money(paid);
+
+document.getElementById("reportDebt")
+.textContent=money(debt);
+
+document.getElementById("reportDelivery")
+.textContent=money(delivery);
+
+document.getElementById("reportExpenses")
+.textContent=money(exp);
+
+document.getElementById("reportProfit")
+.textContent=
+money(delivery-exp);
+
+}
+
+
+/* =====================================================
+   حماية النصوص
+===================================================== */
+
+function escapeHtml(value){
+
+return String(value||"")
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#039;");
+
+}
+
+
+/* =====================================================
+   إغلاق النوافذ
+===================================================== */
+
+window.addEventListener("click",function(event){
+
+let customerModal=
+document.getElementById("customerModal");
+
+let paymentModal=
+document.getElementById("paymentModal");
+
+let statementModal=
+document.getElementById("statementModal");
+
+if(event.target===customerModal)
+closeCustomerModal();
+
+if(event.target===paymentModal)
+closePaymentModal();
+
+if(event.target===statementModal)
+closeStatementModal();
+
+});
+
+
+/* =====================================================
+   التشغيل
+===================================================== */
+
+document.getElementById("currency")
+.value=currency;
+
+loadData();
+
+</script>
+
+</body>
+</html>
