@@ -1,0 +1,148 @@
+name: Add cascade customer deletion
+
+on:
+  push:
+    paths:
+      - '.github/workflows/add-customer-delete.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch index.html
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          if 'async function deleteCustomerCascade(' in s:
+              print('Delete feature already present')
+              raise SystemExit(0)
+
+          marker = "async function syncQueue() {"
+          helpers = r'''
+async function remoteDelete(table, query) {
+  return await apiFetch(table, {method:'DELETE', query, prefer:'return=minimal'});
+}
+
+async function remoteDeleteByCustomer(table, customerId) {
+  let lastError = null;
+  for (const key of ['customer_id','client_id','customerId']) {
+    try {
+      await remoteDelete(table, `${key}=eq.${encodeURIComponent(customerId)}`);
+      return;
+    } catch (error) {
+      lastError = error;
+      if (!isSchemaError(error)) throw error;
+    }
+  }
+  if (lastError) throw lastError;
+}
+
+async function remoteCascadeDeleteCustomer(customerId) {
+  await remoteDeleteByCustomer('payments', customerId);
+  await remoteDeleteByCustomer('orders', customerId);
+  await remoteDelete('customers', `id=eq.${encodeURIComponent(customerId)}`);
+}
+
+async function removeQueuedInsertsForIds(ids) {
+  const wanted = new Set(ids.map(String));
+  for (const item of await idbGetAll('queue')) {
+    if (item.op !== 'delete_customer_cascade' && wanted.has(String(item.localId || ''))) {
+      await idbDelete('queue', item.qid);
+    }
+  }
+}
+
+'''
+          if marker not in s:
+              raise SystemExit('syncQueue marker not found')
+          s = s.replace(marker, helpers + marker, 1)
+
+          old_loop = "      for (const item of queue) {\n        const resolved = [];"
+          new_loop = """      for (const item of queue) {
+        if (item.op === 'delete_customer_cascade') {
+          try {
+            await remoteCascadeDeleteCustomer(item.customerId);
+            await idbDelete('queue', item.qid);
+            progress = true;
+          } catch (error) {
+            console.error('Delete sync error:', item, error);
+            if (!navigator.onLine || error instanceof TypeError) throw error;
+            setConnectionState('error', '⚠️ تعذر حذف العميل من Supabase: ' + (error.message || 'خطأ'));
+            await refreshMemory();
+            syncing = false;
+            return;
+          }
+          continue;
+        }
+        const resolved = [];"""
+          if old_loop not in s:
+              raise SystemExit('queue loop marker not found')
+          s = s.replace(old_loop, new_loop, 1)
+
+          start = s.find('function renderCustomers() {')
+          end = s.find('function openCustomerModal()', start)
+          if start < 0 or end < 0:
+              raise SystemExit('renderCustomers markers not found')
+
+          replacement = r'''function renderCustomers() {
+  const list=$('customersList'); if(!list)return; const q=($('customerSearch')?.value||'').trim().toLowerCase();
+  const data=customers.filter(c=>[customerName(c),customerPhone(c),firstValue(c,['notes','note'],'')].join(' ').toLowerCase().includes(q)); if(!data.length){list.innerHTML='<div class="empty">لا يوجد عملاء</div>';return;}
+  list.innerHTML=data.map(c=>{const debt=customerDebt(c.id); return `<div class="item ${c._local?'local-item':''}"><h3>👤 ${escapeHtml(customerName(c))}</h3><div class="row"><span>الهاتف</span><span>${escapeHtml(customerPhone(c)||'-')}</span></div><div class="row"><span>الرصيد</span><b class="${debt>0?'debt':'paid'}">${money(debt)}</b></div><div class="small">${escapeHtml(firstValue(c,['notes','note'],'')||'')}</div><div class="actions"><button class="success" onclick="openPaymentModal('${escapeHtml(c.id)}')">💵 تسجيل دفعة</button><button class="gray" onclick="openStatementModal('${escapeHtml(c.id)}')">📄 كشف حساب</button><button class="danger" onclick="deleteCustomerCascade('${escapeHtml(c.id)}')">🗑 حذف العميل</button></div>${c._local?'<div class="local-note">⏳ عميل محفوظ محليًا — بانتظار المزامنة</div>':''}</div>`;}).join('');
+}
+
+async function deleteCustomerCascade(customerId) {
+  const customer = customers.find(c => String(c.id) === String(customerId));
+  if (!customer) return alert('العميل غير موجود');
+
+  const relatedOrders = orders.filter(o => String(orderCustomerId(o)) === String(customerId));
+  const relatedPayments = payments.filter(p => String(firstValue(p,['customer_id','customerId','client_id'],'')) === String(customerId));
+  const message = `سيتم حذف العميل "${customerName(customer)}" نهائيًا مع ${relatedOrders.length} طلب و${relatedPayments.length} دفعة مرتبطة به.\n\nهل أنت متأكد؟`;
+  if (!confirm(message)) return;
+
+  const idsToRemove = [customerId, ...relatedOrders.map(o=>o.id), ...relatedPayments.map(p=>p.id)];
+  await removeQueuedInsertsForIds(idsToRemove);
+
+  for (const row of relatedPayments) await idbDelete('payments', row.id);
+  for (const row of relatedOrders) await idbDelete('orders', row.id);
+  await idbDelete('customers', customerId);
+
+  const isLocalOnly = String(customerId).startsWith('local_') || customer._local === true;
+  if (!isLocalOnly) {
+    await idbAdd('queue', {op:'delete_customer_cascade', customerId, created_at:new Date().toISOString()});
+  }
+
+  await refreshMemory();
+  alert(isLocalOnly
+    ? 'تم حذف العميل وبياناته المحلية.'
+    : (navigator.onLine ? 'تم حذف العميل محليًا وسيتم تأكيد الحذف من Supabase.' : 'تم حذف العميل من الجهاز وسيتم حذفه من Supabase عند عودة الإنترنت.'));
+
+  if (!isLocalOnly && navigator.onLine) syncQueue();
+}
+
+'''
+          s = s[:start] + replacement + s[end:]
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Commit patch
+        run: |
+          if git diff --quiet -- index.html; then
+            echo "No changes needed"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Add safe cascade customer deletion"
+          git push
