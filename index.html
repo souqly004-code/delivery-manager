@@ -996,151 +996,411 @@ nav button.active{
 
 
 <script>
-
-/* =====================================================
-   SUPABASE
-===================================================== */
-
-const SUPABASE_URL =
-"https://iphvcddnvhilokwkwfyu.supabase.co";
-
-const SUPABASE_KEY =
-"sb_publishable_H8LcFHEvHE5w0_eFx-NTTA_ztbs5PYq";
-
-const db =
-supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-);
-
-
-/* =====================================================
-   DATA
-===================================================== */
+const SUPABASE_URL = "https://iphvcddnvhilokwkwfyu.supabase.co";
+const SUPABASE_KEY = "sb_publishable_H8LcFHEvHE5w0_eFx-NTTA_ztbs5PYq";
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let customers = [];
 let orders = [];
 let payments = [];
 let expenses = [];
-
 let paymentCustomerId = null;
 
+const $ = (id) => document.getElementById(id);
+const money = (value) => `₪ ${Number(value || 0).toFixed(2)}`;
+const num = (value) => Number(value || 0);
+const todayKey = () => new Date().toISOString().slice(0, 10);
+const rowDate = (row) => String(row.created_at || row.date || row.createdAt || '').slice(0, 10);
+const firstValue = (obj, keys, fallback='') => {
+  for (const key of keys) {
+    if (obj && obj[key] !== undefined && obj[key] !== null) return obj[key];
+  }
+  return fallback;
+};
+const customerName = (c) => firstValue(c, ['name','customer_name','full_name'], 'بدون اسم');
+const customerPhone = (c) => firstValue(c, ['phone','customer_phone','mobile'], '');
+const orderCustomerId = (o) => firstValue(o, ['customer_id','customerId','client_id'], null);
+const orderFee = (o) => num(firstValue(o, ['delivery_fee','delivery','fee','deliveryFee'], 0));
+const orderPaid = (o) => num(firstValue(o, ['paid','paid_amount','amount_paid','order_paid'], 0));
+const paymentAmount = (p) => num(firstValue(p, ['amount','payment_amount','paid'], 0));
+const expenseAmount = (e) => num(firstValue(e, ['amount','expense_amount','value'], 0));
 
-/* =====================================================
-   CONNECTION
-===================================================== */
-
-async function testConnection(){
-
-    const box =
-    document.getElementById("connectionStatus");
-
-    box.className =
-    "connection loading";
-
-    box.textContent =
-    "🔄 جاري الاتصال بقاعدة البيانات...";
-
-
-    try{
-
-        const { error } =
-        await db
-        .from("customers")
-        .select("id")
-        .limit(1);
-
-
-        if(error){
-            throw error;
-        }
-
-
-        box.className =
-        "connection ok";
-
-        box.textContent =
-        "🟢 متصل بقاعدة البيانات";
-
-
-        await loadAllData();
-
-    }
-    catch(error){
-
-        console.error(error);
-
-        box.className =
-        "connection error";
-
-        box.textContent =
-        "🔴 فشل الاتصال بقاعدة البيانات: " +
-        (error.message || "خطأ غير معروف");
-
-    }
-
+function escapeHtml(value='') {
+  return String(value).replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
 }
 
+function showPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const page = $(pageId);
+  if (!page) return console.error('الصفحة غير موجودة:', pageId);
+  page.classList.add('active');
 
-/* =====================================================
-   LOAD DATA
-===================================================== */
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  const nav = $('nav-' + pageId);
+  if (nav) nav.classList.add('active');
 
-async function loadAllData(){
+  if (pageId === 'home') renderDashboard();
+  if (pageId === 'ordersPage') renderOrders();
+  if (pageId === 'customersPage') renderCustomers();
+  if (pageId === 'expensesPage') renderExpenses();
+  if (pageId === 'reportsPage') renderReports();
+  if (pageId === 'addOrderPage') {
+    fillCustomerSelect();
+    showCustomerBalance();
+  }
+  window.scrollTo({top:0, behavior:'smooth'});
+}
 
-    try{
+async function testConnection() {
+  const box = $('connectionStatus');
+  box.className = 'connection loading';
+  box.textContent = '🔄 جاري الاتصال بقاعدة البيانات...';
+  try {
+    const { error } = await db.from('customers').select('id').limit(1);
+    if (error) throw error;
+    box.className = 'connection ok';
+    box.textContent = '🟢 متصل بقاعدة البيانات';
+    await loadAllData();
+  } catch (error) {
+    console.error(error);
+    box.className = 'connection error';
+    box.textContent = '🔴 فشل الاتصال بقاعدة البيانات: ' + (error.message || 'خطأ غير معروف');
+  }
+}
 
-        const customersResult =
-        await db
-        .from("customers")
-        .select("*")
-        .order("created_at",{ascending:false});
+async function safeSelect(table) {
+  const result = await db.from(table).select('*').order('created_at', {ascending:false});
+  if (!result.error) return result.data || [];
+  // Some older tables may not contain created_at.
+  const fallback = await db.from(table).select('*');
+  if (fallback.error) throw fallback.error;
+  return fallback.data || [];
+}
 
+async function loadAllData() {
+  try {
+    [customers, orders, payments, expenses] = await Promise.all([
+      safeSelect('customers'),
+      safeSelect('orders'),
+      safeSelect('payments'),
+      safeSelect('expenses')
+    ]);
+    fillCustomerSelect();
+    renderAll();
+  } catch (error) {
+    console.error('خطأ في تحميل البيانات:', error);
+    alert('تعذر تحميل البيانات من Supabase:\n' + (error.message || error));
+  }
+}
 
-        if(customersResult.error)
-            throw customersResult.error;
+function renderAll() {
+  renderDashboard();
+  renderOrders();
+  renderCustomers();
+  renderExpenses();
+  renderReports();
+}
 
+function fillCustomerSelect() {
+  const select = $('orderCustomer');
+  if (!select) return;
+  const current = select.value;
+  select.innerHTML = '<option value="">-- اختر العميل --</option>' +
+    customers.map(c => `<option value="${escapeHtml(c.id)}">${escapeHtml(customerName(c))}</option>`).join('');
+  if ([...select.options].some(o => o.value === current)) select.value = current;
+}
 
-        customers =
-        customersResult.data || [];
+function customerDebt(customerId) {
+  const relatedOrders = orders.filter(o => String(orderCustomerId(o)) === String(customerId));
+  const fees = relatedOrders.reduce((s,o) => s + orderFee(o), 0);
+  const paidInOrders = relatedOrders.reduce((s,o) => s + orderPaid(o), 0);
+  const extraPayments = payments
+    .filter(p => String(firstValue(p,['customer_id','customerId','client_id'],'')) === String(customerId))
+    .reduce((s,p) => s + paymentAmount(p), 0);
+  return Math.max(0, fees - paidInOrders - extraPayments);
+}
 
+function showCustomerBalance() {
+  const id = $('orderCustomer')?.value;
+  const box = $('customerBalanceBox');
+  if (!box) return;
+  if (!id) { box.innerHTML = ''; return; }
+  const debt = customerDebt(id);
+  box.innerHTML = `<div class="balance ${debt > 0 ? 'debtbox' : ''}"><div class="row"><span>رصيد العميل الحالي</span><b class="${debt>0?'debt':'paid'}">${money(debt)}</b></div></div>`;
+}
 
-        const ordersResult =
-        await db
-        .from("orders")
-        .select("*")
-        .order("created_at",{ascending:false});
+function calculateOrderDebt() {
+  const fee = num($('deliveryFee')?.value);
+  const paid = num($('orderPaid')?.value);
+  $('displayDelivery').textContent = money(fee);
+  $('displayPaid').textContent = money(paid);
+  $('newDebt').textContent = money(Math.max(0, fee - paid));
+}
 
+function clearOrderForm() {
+  ['receiverName','receiverPhone','receiverAddress','orderDetails','orderNotes'].forEach(id => { if ($(id)) $(id).value=''; });
+  if ($('orderCustomer')) $('orderCustomer').value='';
+  if ($('deliveryFee')) $('deliveryFee').value='0';
+  if ($('orderPaid')) $('orderPaid').value='0';
+  calculateOrderDebt();
+  showCustomerBalance();
+}
 
-        if(ordersResult.error)
-            throw ordersResult.error;
+async function insertWithFallback(table, payloads) {
+  let lastError = null;
+  for (const payload of payloads) {
+    const { data, error } = await db.from(table).insert(payload).select();
+    if (!error) return data;
+    lastError = error;
+    const msg = String(error.message || '').toLowerCase();
+    const schemaProblem = msg.includes('column') || msg.includes('schema cache') || msg.includes('could not find');
+    if (!schemaProblem) break;
+  }
+  throw lastError || new Error('فشلت عملية الحفظ');
+}
 
+async function addOrder() {
+  const customerId = $('orderCustomer').value;
+  if (!customerId) return alert('اختر العميل أولاً');
+  const fee = num($('deliveryFee').value);
+  const paid = num($('orderPaid').value);
+  if (paid > fee) return alert('المبلغ المدفوع لا يمكن أن يكون أكبر من أجرة الديلفري');
 
-        orders =
-        ordersResult.data || [];
+  const base = {
+    customer_id: customerId,
+    receiver_name: $('receiverName').value.trim(),
+    receiver_phone: $('receiverPhone').value.trim(),
+    receiver_address: $('receiverAddress').value.trim(),
+    delivery_fee: fee,
+    paid: paid,
+    details: $('orderDetails').value.trim(),
+    notes: $('orderNotes').value.trim()
+  };
 
+  try {
+    await insertWithFallback('orders', [
+      base,
+      {...base, paid_amount: base.paid, paid: undefined},
+      {customer_id:customerId, receiver_name:base.receiver_name, receiver_phone:base.receiver_phone, receiver_address:base.receiver_address, delivery_fee:fee, amount_paid:paid, order_details:base.details, notes:base.notes},
+      {customer_id:customerId, delivery_fee:fee, paid_amount:paid, notes:base.notes}
+    ].map(p => Object.fromEntries(Object.entries(p).filter(([,v]) => v !== undefined))));
+    clearOrderForm();
+    await loadAllData();
+    alert('تم حفظ الطلب بنجاح');
+    showPage('ordersPage');
+  } catch (error) {
+    console.error(error);
+    alert('فشل حفظ الطلب في Supabase:\n' + (error.message || error) + '\n\nتحقق من أسماء الأعمدة وسياسات RLS.');
+  }
+}
 
-        const paymentsResult =
-        await db
-        .from("payments")
-        .select("*")
-        .order("created_at",{ascending:false});
+function renderOrders() {
+  const list = $('ordersList');
+  if (!list) return;
+  const q = ($('orderSearch')?.value || '').trim().toLowerCase();
+  const filter = $('orderFilter')?.value || 'all';
+  const today = todayKey();
 
+  let data = orders.filter(o => {
+    const c = customers.find(x => String(x.id) === String(orderCustomerId(o)));
+    const hay = [customerName(c||{}), firstValue(o,['receiver_name','receiver','recipient_name'],''), firstValue(o,['receiver_phone','phone'],''), firstValue(o,['receiver_address','address'],''), firstValue(o,['details','order_details'],''), firstValue(o,['notes','note'],'')].join(' ').toLowerCase();
+    if (q && !hay.includes(q)) return false;
+    if (filter === 'today' && rowDate(o) !== today) return false;
+    if (filter === 'debt' && (orderFee(o) - orderPaid(o)) <= 0) return false;
+    return true;
+  });
 
-        if(paymentsResult.error)
-            throw paymentsResult.error;
+  if (!data.length) { list.innerHTML = '<div class="empty">لا توجد طلبات</div>'; return; }
+  list.innerHTML = data.map(o => {
+    const c = customers.find(x => String(x.id) === String(orderCustomerId(o)));
+    const debt = Math.max(0, orderFee(o)-orderPaid(o));
+    return `<div class="item">
+      <h3>📦 ${escapeHtml(customerName(c||{}))}</h3>
+      <div class="row"><span>المستلم</span><b>${escapeHtml(firstValue(o,['receiver_name','receiver','recipient_name'],'-'))}</b></div>
+      <div class="row"><span>الهاتف</span><span>${escapeHtml(firstValue(o,['receiver_phone','phone'],'-'))}</span></div>
+      <div class="row"><span>العنوان</span><span>${escapeHtml(firstValue(o,['receiver_address','address'],'-'))}</span></div>
+      <hr>
+      <div class="row"><span>أجرة الديلفري</span><b>${money(orderFee(o))}</b></div>
+      <div class="row"><span>المدفوع</span><b class="paid">${money(orderPaid(o))}</b></div>
+      <div class="row"><span>الدين</span><b class="${debt>0?'debt':'paid'}">${money(debt)}</b></div>
+      <div class="small">${escapeHtml(firstValue(o,['details','order_details'],'') || '')}</div>
+      <div class="small">${escapeHtml(firstValue(o,['notes','note'],'') || '')}</div>
+      <div class="small">${escapeHtml(rowDate(o) || '')}</div>
+    </div>`;
+  }).join('');
+}
 
+function renderCustomers() {
+  const list = $('customersList');
+  if (!list) return;
+  const q = ($('customerSearch')?.value || '').trim().toLowerCase();
+  const data = customers.filter(c => [customerName(c), customerPhone(c), firstValue(c,['notes','note'],'')].join(' ').toLowerCase().includes(q));
+  if (!data.length) { list.innerHTML = '<div class="empty">لا يوجد عملاء</div>'; return; }
+  list.innerHTML = data.map(c => {
+    const debt = customerDebt(c.id);
+    return `<div class="item">
+      <h3>👤 ${escapeHtml(customerName(c))}</h3>
+      <div class="row"><span>الهاتف</span><span>${escapeHtml(customerPhone(c) || '-')}</span></div>
+      <div class="row"><span>الرصيد</span><b class="${debt>0?'debt':'paid'}">${money(debt)}</b></div>
+      <div class="small">${escapeHtml(firstValue(c,['notes','note'],'') || '')}</div>
+      <div class="actions">
+        <button class="success" onclick="openPaymentModal('${escapeHtml(c.id)}')">💵 تسجيل دفعة</button>
+        <button class="gray" onclick="openStatementModal('${escapeHtml(c.id)}')">📄 كشف حساب</button>
+      </div>
+    </div>`;
+  }).join('');
+}
 
-        payments =
-        paymentsResult.data || [];
+function openCustomerModal() {
+  $('customerModal').style.display = 'block';
+  setTimeout(() => $('newCustomerName')?.focus(), 50);
+}
+function closeCustomerModal() { $('customerModal').style.display = 'none'; }
 
+async function addCustomer() {
+  const name = $('newCustomerName').value.trim();
+  if (!name) return alert('اكتب اسم العميل');
+  const phone = $('newCustomerPhone').value.trim();
+  const notes = $('newCustomerNotes').value.trim();
+  try {
+    await insertWithFallback('customers', [
+      {name, phone, notes},
+      {customer_name:name, phone, notes},
+      {name, mobile:phone, note:notes}
+    ]);
+    $('newCustomerName').value=''; $('newCustomerPhone').value=''; $('newCustomerNotes').value='';
+    closeCustomerModal();
+    await loadAllData();
+    alert('تم إضافة العميل بنجاح');
+  } catch (error) {
+    console.error(error);
+    alert('فشل إضافة العميل:\n' + (error.message || error) + '\n\nتحقق من سياسات RLS في جدول customers.');
+  }
+}
 
-        const expensesResult =
-        await db
-        .from("expenses")
-        .select("*")
-        .order("created_at",{ascending:false});
+function openPaymentModal(customerId) {
+  paymentCustomerId = customerId;
+  const c = customers.find(x => String(x.id) === String(customerId));
+  $('paymentInfo').innerHTML = `<div class="balance"><div class="row"><span>${escapeHtml(customerName(c||{}))}</span><b class="debt">${money(customerDebt(customerId))}</b></div></div>`;
+  $('paymentAmount').value='';
+  $('paymentModal').style.display='block';
+}
+function closePaymentModal() { $('paymentModal').style.display='none'; paymentCustomerId=null; }
 
+async function savePayment() {
+  if (!paymentCustomerId) return;
+  const amount = num($('paymentAmount').value);
+  if (amount <= 0) return alert('أدخل مبلغ دفعة صحيح');
+  const debt = customerDebt(paymentCustomerId);
+  if (amount > debt && debt > 0) return alert('مبلغ الدفعة أكبر من دين العميل الحالي');
+  try {
+    await insertWithFallback('payments', [
+      {customer_id:paymentCustomerId, amount},
+      {customer_id:paymentCustomerId, payment_amount:amount},
+      {client_id:paymentCustomerId, amount}
+    ]);
+    closePaymentModal();
+    await loadAllData();
+    alert('تم تسجيل الدفعة');
+  } catch (error) {
+    console.error(error);
+    alert('فشل تسجيل الدفعة:\n' + (error.message || error));
+  }
+}
 
-        if(expensesResult.error)
-  
+function openStatementModal(customerId) {
+  const c = customers.find(x => String(x.id) === String(customerId));
+  $('statementTitle').textContent = 'كشف حساب - ' + customerName(c||{});
+  const os = orders.filter(o => String(orderCustomerId(o)) === String(customerId));
+  const ps = payments.filter(p => String(firstValue(p,['customer_id','customerId','client_id'],'')) === String(customerId));
+  const rows = [
+    ...os.map(o => ({date:rowDate(o), text:'طلب ديلفري', debit:orderFee(o), credit:orderPaid(o)})),
+    ...ps.map(p => ({date:rowDate(p), text:'دفعة', debit:0, credit:paymentAmount(p)}))
+  ].sort((a,b) => String(b.date).localeCompare(String(a.date)));
+  $('statementContent').innerHTML = `<div class="balance debtbox"><div class="row"><span>الرصيد الحالي</span><b class="debt">${money(customerDebt(customerId))}</b></div></div><br>` +
+    (rows.length ? rows.map(r => `<div class="item"><div class="row"><b>${escapeHtml(r.text)}</b><span>${escapeHtml(r.date||'')}</span></div><div class="row"><span>مستحق</span><b>${money(r.debit)}</b></div><div class="row"><span>مدفوع</span><b class="paid">${money(r.credit)}</b></div></div>`).join('') : '<div class="empty">لا توجد حركات</div>');
+  $('statementModal').style.display='block';
+}
+function closeStatementModal() { $('statementModal').style.display='none'; }
+
+async function addExpense() {
+  const title = $('expenseTitle').value.trim();
+  const amount = num($('expenseAmount').value);
+  const note = $('expenseNote').value.trim();
+  if (!title) return alert('اكتب نوع المصروف');
+  if (amount <= 0) return alert('أدخل مبلغًا صحيحًا');
+  try {
+    await insertWithFallback('expenses', [
+      {title, amount, note},
+      {expense_title:title, amount, notes:note},
+      {name:title, expense_amount:amount, note}
+    ]);
+    $('expenseTitle').value=''; $('expenseAmount').value=''; $('expenseNote').value='';
+    await loadAllData();
+    alert('تم حفظ المصروف');
+  } catch (error) {
+    console.error(error);
+    alert('فشل حفظ المصروف:\n' + (error.message || error));
+  }
+}
+
+function renderExpenses() {
+  const list = $('expensesList');
+  if (!list) return;
+  if (!expenses.length) { list.innerHTML='<div class="empty">لا توجد مصاريف</div>'; return; }
+  list.innerHTML = expenses.map(e => `<div class="item"><h3>💸 ${escapeHtml(firstValue(e,['title','expense_title','name'],'مصروف'))}</h3><div class="row"><span>المبلغ</span><b>${money(expenseAmount(e))}</b></div><div class="small">${escapeHtml(firstValue(e,['note','notes'],'') || '')}</div><div class="small">${escapeHtml(rowDate(e) || '')}</div></div>`).join('');
+}
+
+function totals() {
+  const totalDelivery = orders.reduce((s,o)=>s+orderFee(o),0);
+  const orderPayments = orders.reduce((s,o)=>s+orderPaid(o),0);
+  const extraPayments = payments.reduce((s,p)=>s+paymentAmount(p),0);
+  const totalPaid = orderPayments + extraPayments;
+  const totalDebt = Math.max(0, totalDelivery - totalPaid);
+  const totalExpenses = expenses.reduce((s,e)=>s+expenseAmount(e),0);
+  return {totalDelivery,totalPaid,totalDebt,totalExpenses,net:totalPaid-totalExpenses};
+}
+
+function renderDashboard() {
+  const t = totals();
+  const today = todayKey();
+  const todayOrdersData = orders.filter(o => rowDate(o) === today);
+  const todayPayments = payments.filter(p => rowDate(p) === today);
+  const todayExpensesData = expenses.filter(e => rowDate(e) === today);
+  const todayIncome = todayOrdersData.reduce((s,o)=>s+orderPaid(o),0) + todayPayments.reduce((s,p)=>s+paymentAmount(p),0);
+  const todayExpense = todayExpensesData.reduce((s,e)=>s+expenseAmount(e),0);
+  $('todayIncome').textContent = money(todayIncome);
+  $('todayOrders').textContent = todayOrdersData.length;
+  $('totalDebt').textContent = money(t.totalDebt);
+  $('todayExpenses').textContent = money(todayExpense);
+  $('allDelivery').textContent = money(t.totalDelivery);
+  $('allPaid').textContent = money(t.totalPaid);
+  $('allDebt').textContent = money(t.totalDebt);
+  $('allExpenses').textContent = money(t.totalExpenses);
+  $('netProfit').textContent = money(t.net);
+}
+
+function renderReports() {
+  const t = totals();
+  $('reportOrders').textContent = orders.length;
+  $('reportDelivery').textContent = money(t.totalDelivery);
+  $('reportPaid').textContent = money(t.totalPaid);
+  $('reportDebt').textContent = money(t.totalDebt);
+  $('reportExpenses').textContent = money(t.totalExpenses);
+  $('reportProfit').textContent = money(t.net);
+}
+
+window.addEventListener('click', (e) => {
+  if (e.target === $('customerModal')) closeCustomerModal();
+  if (e.target === $('paymentModal')) closePaymentModal();
+  if (e.target === $('statementModal')) closeStatementModal();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  calculateOrderDebt();
+  showPage('home');
+  testConnection();
+});
+</script>
+</body>
+</html>
